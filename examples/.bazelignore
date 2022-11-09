@@ -2,5 +2,6 @@ android
 cargo_manifest_dir/external_crate
 crate_universe
 crate_universe_unnamed
+expand
 ios
 ios_build

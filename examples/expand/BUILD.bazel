@@ -1,0 +1,62 @@
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_expand", "rust_library", "rust_test")
+
+package(default_visibility = ["//test:__subpackages__"])
+
+# Declaration of targets.
+
+rust_binary(
+    name = "ok_binary",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+)
+
+rust_library(
+    name = "ok_library",
+    srcs = ["src/lib.rs"],
+    edition = "2021",
+)
+
+rust_test(
+    name = "ok_test",
+    srcs = ["src/lib.rs"],
+    edition = "2021",
+)
+
+# Expand targets.
+
+rust_expand(
+    name = "ok_binary_expand",
+    deps = [":ok_binary"],
+)
+
+rust_expand(
+    name = "ok_library_expand",
+    deps = [":ok_library"],
+)
+
+rust_expand(
+    name = "ok_test_expand",
+    testonly = True,
+    deps = [":ok_test"],
+)
+
+# Assert on expanded targets.
+
+diff_test(
+    name = "ok_binary_expand_test",
+    file1 = ":ok_binary.expand.expected.rs",
+    file2 = ":ok_binary_expand",
+)
+
+diff_test(
+    name = "ok_library_expand_test",
+    file1 = ":ok_library.expand.expected.rs",
+    file2 = ":ok_library_expand",
+)
+
+diff_test(
+    name = "ok_test_expand_test",
+    file1 = ":ok_test.expand.expected.rs",
+    file2 = ":ok_test_expand",
+)

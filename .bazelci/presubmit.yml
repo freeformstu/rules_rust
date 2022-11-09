@@ -411,6 +411,16 @@ tasks:
       - "//..."
     test_targets:
       - "//..."
+  expand_examples_ubuntu2004:
+    name: Expand Examples
+    platform: ubuntu2004
+    working_directory: examples/expand
+    build_targets:
+      - "//..."
+    test_targets:
+      - "//..."
+    build_flags:
+      - "--config=expanded"
   cc_common_link_ubuntu2004:
     name: Build via cc_common.link
     platform: ubuntu2004

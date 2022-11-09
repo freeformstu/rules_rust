@@ -1,0 +1,10 @@
+# `.bazelrc` is a Bazel configuration file.
+# https://bazel.build/docs/best-practices#bazelrc-file
+
+# Enable rustc expand targets
+build:expanded --aspects=@rules_rust//rust:defs.bzl%rust_expand_aspect
+build:expanded --output_groups=+expanded
+
+# This import should always be last to allow users to override
+# settings for local development.
+try-import %workspace%/user.bazelrc
