@@ -53,6 +53,46 @@ fn run_buildrs() -> Result<(), String> {
     create_dir_all(&out_dir_abs)
         .unwrap_or_else(|_| panic!("Failed to make output directory: {:?}", out_dir_abs));
 
+    // Symlink the execroot to the manifest_dir so that we can use relative paths in the arguments.
+    let exec_root_paths = std::fs::read_dir(&exec_root)
+        .map_err(|err| format!("Failed while listing exec root: {:?}", err))?;
+    for path in exec_root_paths {
+        let path = path
+            .map_err(|err| {
+                format!(
+                    "Failed while getting path from exec root listing: {:?}",
+                    err
+                )
+            })?
+            .path();
+        let metadata = std::fs::metadata(&path).map_err(|err| {
+            format!(
+                "Failed while getting metadata for path {:?}: {:?}",
+                path, err
+            )
+        })?;
+
+        // Only symlink directories.
+        if !metadata.is_dir() {
+            continue;
+        }
+
+        let dir_name = path
+            .file_name()
+            .ok_or_else(|| "Failed while getting file name".to_string())?
+            .to_str()
+            .ok_or_else(|| "Failed while converting file name to string".to_string())?;
+        let link = manifest_dir.join(dir_name);
+
+        // If the link already exists, don't try to create it.
+        if link.exists() {
+            continue;
+        }
+
+        symlink(&path, &link)
+            .map_err(|err| format!("Failed to symlink {:?} to {:?}: {}", path, link, err))?;
+    }
+
     let target_env_vars =
         get_target_env_vars(&rustc_env).expect("Error getting target env vars from rustc");
 
@@ -171,6 +211,26 @@ fn run_buildrs() -> Result<(), String> {
         .unwrap_or_else(|_| panic!("Unable to write file {:?}", link_flags_file));
     write(&link_search_paths_file, link_search_paths.as_bytes())
         .unwrap_or_else(|_| panic!("Unable to write file {:?}", link_search_paths_file));
+    Ok(())
+}
+
+/// Create a symlink from `link` to `original`.
+///
+/// Link must be a directory.
+#[cfg(windows)]
+fn symlink(original: &Path, link: &Path) -> Result<(), String> {
+    if let Err(e) = std::os::windows::fs::symlink_dir(original, link) {
+        return Err(format!("Failed to create symlink: {}", e));
+    }
+    Ok(())
+}
+
+/// Create a symlink from `link` to `original`.
+#[cfg(not(windows))]
+fn symlink(original: &Path, link: &Path) -> Result<(), String> {
+    if let Err(e) = std::os::unix::fs::symlink(original, link) {
+        return Err(format!("Failed to create symlink: {}", e));
+    }
     Ok(())
 }
 
