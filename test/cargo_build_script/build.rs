@@ -18,7 +18,6 @@ fn test_encoded_rustflags() {
     assert_eq!(flags[1], "--verbose");
 }
 
-
 /// Ensure Make variables provided by the `toolchains` attribute are expandable.
 fn test_toolchain_var() {
     let tool = std::env::var("EXPANDED_TOOLCHAIN_VAR").unwrap();
