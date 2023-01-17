@@ -3,6 +3,7 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "CPP_COMPILE_ACTION_NAME", "C_COMPILE_ACTION_NAME")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("//cargo:features.bzl", "SYMLINK_EXEC_ROOT_FEATURE", "feature_enabled")
 load("//rust:defs.bzl", "rust_common")
 
 # buildifier: disable=bzl-visibility
@@ -232,6 +233,9 @@ def _cargo_build_script_impl(ctx):
             build_script_inputs.append(dep_env_file)
             for dep_build_info in dep[rust_common.dep_info].transitive_build_infos.to_list():
                 build_script_inputs.append(dep_build_info.out_dir)
+
+    if feature_enabled(ctx, SYMLINK_EXEC_ROOT_FEATURE):
+        env["RULES_RUST_SYMLINK_EXEC_ROOT"] = "1"
 
     ctx.actions.run(
         executable = ctx.executable._cargo_build_script_runner,
