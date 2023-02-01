@@ -65,15 +65,9 @@ fn run_buildrs() -> Result<(), String> {
                 )
             })?
             .path();
-        let metadata = std::fs::metadata(&path).map_err(|err| {
-            format!(
-                "Failed while getting metadata for path {:?}: {:?}",
-                path, err
-            )
-        })?;
 
         // Only symlink directories.
-        if !metadata.is_dir() {
+        if !path.is_dir() {
             continue;
         }
 
