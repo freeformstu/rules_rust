@@ -3,8 +3,8 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "CPP_COMPILE_ACTION_NAME", "C_COMPILE_ACTION_NAME")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
-load("//cargo:features.bzl", "SYMLINK_EXEC_ROOT_FEATURE", "feature_enabled")
 load("//rust:defs.bzl", "rust_common")
+load(":features.bzl", "SYMLINK_EXEC_ROOT_FEATURE", "feature_enabled")
 
 # buildifier: disable=bzl-visibility
 load("//rust/private:providers.bzl", _DepInfo = "DepInfo")

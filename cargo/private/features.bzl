@@ -1,4 +1,4 @@
-"""Public Cargo features for Bazel."""
+"""Cargo features for Bazel."""
 
 # `symlink-exec-root` feature will symlink the execroot to the build script execution directory.
 #

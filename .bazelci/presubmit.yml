@@ -27,7 +27,6 @@ default_windows_targets: &default_windows_targets
   - "-//bindgen/..."
   - "-//test/proto/..."
   - "-//test/unit/pipelined_compilation/..."
-  - "-//test/cargo_build_script:test_exec_root_access.build.feature_enabled"
 crate_universe_vendor_example_targets: &crate_universe_vendor_example_targets
   - "//vendor_external:crates_vendor"
   - "//vendor_local_manifests:crates_vendor"
