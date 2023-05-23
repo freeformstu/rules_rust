@@ -3,9 +3,8 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "CPP_COMPILE_ACTION_NAME", "C_COMPILE_ACTION_NAME")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
-load("//rust:defs.bzl", "rust_common")
-load(":features.bzl", "feature_enabled")
 load("//cargo:features.bzl", "SYMLINK_EXEC_ROOT_FEATURE")
+load("//rust:defs.bzl", "rust_common")
 
 # buildifier: disable=bzl-visibility
 load("//rust/private:providers.bzl", _DepInfo = "DepInfo")
@@ -15,6 +14,7 @@ load("//rust/private:rustc.bzl", "BuildInfo", "get_compilation_mode_opts", "get_
 
 # buildifier: disable=bzl-visibility
 load("//rust/private:utils.bzl", "dedent", "expand_dict_value_locations", "find_cc_toolchain", "find_toolchain", _name_to_crate_name = "name_to_crate_name")
+load(":features.bzl", "feature_enabled")
 
 # Reexport for cargo_build_script_wrapper.bzl
 name_to_crate_name = _name_to_crate_name
