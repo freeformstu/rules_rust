@@ -17,16 +17,9 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//proto/3rdparty/crates:defs.bzl", "crate_repositories")
+load("//proto/prost:repositories.bzl", "rust_prost_dependencies", "rust_prost_register_toolchains")
 
-# buildifier: disable=unnamed-macro
-def rust_proto_repositories(register_default_toolchain = True):
-    """Declare dependencies needed for proto compilation.
-
-    Args:
-        register_default_toolchain (bool, optional): If True, the default [rust_proto_toolchain](#rust_proto_toolchain)
-            (`@rules_rust//proto:default-proto-toolchain`) is registered. This toolchain requires a set of dependencies
-            that were generated using [crate_universe](https://github.com/bazelbuild/rules_rust/tree/main/crate_universe). These will also be loaded.
-    """
+def rust_proto_dependencies():
     maybe(
         http_archive,
         name = "rules_proto",
@@ -55,6 +48,30 @@ def rust_proto_repositories(register_default_toolchain = True):
 
     crate_repositories()
 
-    # Register toolchains
-    if register_default_toolchain:
+    rust_prost_dependencies()
+
+def rust_proto_register_toolchains(register_proto_toolchains = True, register_prost_toolchains = True):
+    """_summary_
+
+    Args:
+        register_proto_toolchains (bool, optional): _description_. Defaults to True.
+        register_prost_toolchains (bool, optional): _description_. Defaults to True.
+    """
+
+    rust_prost_register_toolchains(register_prost_toolchains)
+
+    if register_proto_toolchains:
         native.register_toolchains(str(Label("//proto:default-proto-toolchain")))
+
+# buildifier: disable=unnamed-macro
+def rust_proto_repositories(register_default_toolchain = True):
+    """Declare dependencies needed for proto compilation.
+
+    Args:
+        register_default_toolchain (bool, optional): If True, the default [rust_proto_toolchain](#rust_proto_toolchain)
+            (`@rules_rust//proto:default-proto-toolchain`) is registered. This toolchain requires a set of dependencies
+            that were generated using [crate_universe](https://github.com/bazelbuild/rules_rust/tree/main/crate_universe). These will also be loaded.
+    """
+
+    rust_proto_dependencies()
+    rust_proto_register_toolchains(register_proto_toolchains = register_default_toolchain, register_prost_toolchains = False)

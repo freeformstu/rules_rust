@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "proto/prost/private/tests/proto/a/b/b.proto";
+
+package a;
+
+message A {
+  // Request message contains the name to be greeted
+  string name = 1;
+
+  a.b.B b = 2;
+
+  google.protobuf.Timestamp timestamp = 3;
+
+  google.protobuf.Duration duration = 4;
+}

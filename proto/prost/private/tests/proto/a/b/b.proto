@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "a/b/c/c.proto";
+
+package a.b;
+
+message B {
+  // Request message contains the name to be greeted
+  string name = 1;
+
+  google.protobuf.Empty empty = 2;
+
+  a.b.c.C c = 3;
+}

@@ -1,0 +1,23 @@
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+load(":prost.bzl", "PROST_EXTENSION", "RUST_EDITION", "TONIC_EXTENSION")
+
+rust_binary(
+    name = "protoc_wrapper",
+    srcs = ["protoc_wrapper.rs"],
+    edition = RUST_EDITION,
+    rustc_env = {
+        "PROST_EXTENSION": PROST_EXTENSION,
+        "TONIC_EXTENSION": TONIC_EXTENSION,
+    },
+    visibility = ["//visibility:public"],
+)
+
+bzl_library(
+    name = "bzl_lib",
+    srcs = glob(["**/*.bzl"]),
+    visibility = ["//proto/prost:__pkg__"],
+    deps = [
+        "//proto/prost/private/3rdparty:bzl_lib",
+    ],
+)
