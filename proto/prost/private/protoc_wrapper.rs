@@ -25,17 +25,15 @@ fn find_generated_rust_files(out_dir: &Path) -> ProtocResult<BTreeSet<PathBuf>> 
             for f in find_generated_rust_files(&path)? {
                 all_rs_files.insert(f);
             }
-        } else {
-            if let Some(ext) = path.extension() {
-                if ext == "rs" {
-                    all_rs_files.insert(path);
-                }
-            } else if let Some(name) = path.file_name() {
-                if name == "_" {
-                    let rs_name = path.parent().expect("Failed to get parent").join("_.rs");
-                    fs::rename(&path, &rs_name).map_err(from_error)?;
-                    all_rs_files.insert(rs_name);
-                }
+        } else if let Some(ext) = path.extension() {
+            if ext == "rs" {
+                all_rs_files.insert(path);
+            }
+        } else if let Some(name) = path.file_name() {
+            if name == "_" {
+                let rs_name = path.parent().expect("Failed to get parent").join("_.rs");
+                fs::rename(&path, &rs_name).map_err(from_error)?;
+                all_rs_files.insert(rs_name);
             }
         }
     }
@@ -224,11 +222,11 @@ fn compute_proto_package_info(
     crate_name: &str,
     protoc: &Path,
     includes: &BTreeSet<String>,
-    proto_paths: &Vec<String>,
+    proto_paths: &[String],
 ) -> ProtocResult<BTreeSet<String>> {
     let mut extern_paths = BTreeSet::new();
     for proto_file in proto_files.iter() {
-        let output = process::Command::new(&protoc)
+        let output = process::Command::new(protoc)
             .args(includes.iter().map(|include| format!("-I{}", include)))
             .arg("--print_free_field_numbers")
             .args(
@@ -259,16 +257,16 @@ fn compute_proto_package_info(
             }
 
             let (absolute, _) = text
-                .split_once(" ")
+                .split_once(' ')
                 .ok_or_else(|| format!("Failed to split line: {}", text))?;
 
             let mut package = "";
             let mut symbol_name = absolute;
-            if let Some((package_, symbol_name_)) = absolute.rsplit_once(".") {
+            if let Some((package_, symbol_name_)) = absolute.rsplit_once('.') {
                 package = package_;
                 symbol_name = symbol_name_;
             }
-            let symbol = format!("{}::{}", package.replace(".", "::"), symbol_name);
+            let symbol = format!("{}::{}", package.replace('.', "::"), symbol_name);
             let extern_path = format!(".{}={}::{}", absolute, crate_name, symbol.trim_matches(':'));
             if !extern_paths.insert(extern_path.clone()) {
                 panic!("Duplicate extern: {}", extern_path);
@@ -335,23 +333,27 @@ impl Args {
         // for the process runner and arguments for protoc and potentially spawn
         // additional arguments needed by prost.
         for arg in env::args().skip(1) {
-            if !arg.starts_with("-") {
+            if !arg.starts_with('-') {
                 proto_files.insert(PathBuf::from(arg));
                 continue;
             }
 
             if arg.starts_with("-I") {
-                includes.insert(arg[2..].to_string());
+                includes.insert(
+                    arg.strip_prefix("-I")
+                        .expect("Failed to strip -I")
+                        .to_string(),
+                );
                 continue;
             }
 
-            if !arg.contains("=") {
+            if !arg.contains('=') {
                 extra_args.push(arg);
                 continue;
             }
 
             let part = arg
-                .split_once("=")
+                .split_once('=')
                 .ok_or_else(|| format!("Failed to parse argument `{arg}`",))?;
             match part {
                 ("--protoc", value) => {
@@ -369,7 +371,7 @@ impl Args {
                 }
                 ("--package_info_output", value) => {
                     let (key, value) = value
-                        .split_once("=")
+                        .split_once('=')
                         .map(|(a, b)| (a.to_string(), PathBuf::from(b)))
                         .expect("Failed to parse package info output");
                     crate_name = Some(key);
@@ -539,7 +541,7 @@ fn main() -> ProtocResult<()> {
     // Write outputs
     fs::write(&out_librs, generate_lib_rs(&rust_files, is_tonic)?).map_err(from_error)?;
     fs::write(
-        &package_info_file,
+        package_info_file,
         package_info.into_iter().collect::<Vec<_>>().join("\n"),
     )
     .map_err(from_error)?;

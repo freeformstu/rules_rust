@@ -28,9 +28,11 @@ load(
     _crates_vendor = "crates_vendor",
 )
 load(
-    "@rules_rust//proto:proto.bzl",
+    "@rules_rust//proto:defs.bzl",
     _rust_grpc_library = "rust_grpc_library",
+    _rust_prost_library = "rust_prost_library",
     _rust_proto_library = "rust_proto_library",
+    _rust_tonic_library = "rust_tonic_library",
 )
 load(
     "@rules_rust//proto:repositories.bzl",
@@ -124,6 +126,8 @@ rust_doc_test = _rust_doc_test
 
 rust_proto_library = _rust_proto_library
 rust_grpc_library = _rust_grpc_library
+rust_prost_library = _rust_prost_library
+rust_tonic_library = _rust_tonic_library
 
 rust_bindgen = _rust_bindgen
 rust_bindgen_dependencies = _rust_bindgen_dependencies

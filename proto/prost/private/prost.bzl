@@ -1,6 +1,6 @@
 """Rules for building protos in Rust with Prost and Tonic."""
 
-load("@rules_proto//proto:defs.bzl", "ProtoInfo")
+load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
 load("//rust:defs.bzl", "rust_common")
 
 # buildifier: disable=bzl-visibility
@@ -9,13 +9,6 @@ load("//rust/private:providers.bzl", "DepVariantInfo")
 # buildifier: disable=bzl-visibility
 load("//rust/private:rustc.bzl", "rustc_compile_action")
 load(":providers.bzl", "ProstProtoInfo", "TonicProtoInfo")
-
-# This follows the exact same convention as the new upstream protobuf rules.
-# https://github.com/protocolbuffers/protobuf/blob/v23.3/rust/aspects.bzl#L15
-# The interface here hasn't changed in quite a while and since there's now
-# additional reliance on it there it seems unlikely that it will break and if
-# it does there should be a clear migration example for Starlark code there.
-proto_common = proto_common_do_not_use
 
 PROST_EXTENSION = ".rs"
 TONIC_EXTENSION = ".tonic.rs"
