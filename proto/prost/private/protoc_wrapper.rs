@@ -462,6 +462,9 @@ impl Args {
 }
 
 fn main() {
+    // Always enable backtraces for the protoc wrapper.
+    env::set_var("RUST_BACKTRACE", "1");
+
     let Args {
         protoc,
         out_dir,
