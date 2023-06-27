@@ -1,5 +1,5 @@
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
-load("@rules_rust//rust:defs.bzl", "rust_binary")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
 load(":prost.bzl", "PROST_EXTENSION", "RUST_EDITION", "TONIC_EXTENSION")
 
 rust_binary(
@@ -11,6 +11,12 @@ rust_binary(
         "TONIC_EXTENSION": TONIC_EXTENSION,
     },
     visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "protoc_wrapper_test",
+    crate = ":protoc_wrapper",
+    edition = RUST_EDITION,
 )
 
 bzl_library(

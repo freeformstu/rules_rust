@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "a/b/c/c.proto";
+import "b/c/c.proto";
 
 package a.b;
 

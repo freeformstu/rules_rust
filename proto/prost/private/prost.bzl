@@ -43,10 +43,14 @@ def _compile_proto(ctx, crate_name, proto_info, deps, prost_toolchain, is_tonic,
     additional_args.add("--prost_opt=compile_well_known_types")
     additional_args.add_all(prost_toolchain.prost_opts, format_each = "--prost_opt=%s")
 
-    if prost_toolchain.tonic_plugin:
+    if is_tonic:
+        if not prost_toolchain.tonic_plugin:
+            fail("Tonic plugin not configured for this toolchain")
+
         tonic_plugin = prost_toolchain.tonic_plugin[DefaultInfo].files_to_run
         additional_args.add(prost_toolchain.tonic_plugin_flag % tonic_plugin.executable.path)
         additional_args.add("--tonic_opt=no_include")
+        additional_args.add("--is_tonic")
         additional_args.add_all(prost_toolchain.tonic_opts, format_each = "--tonic_opt=%s")
         tools = depset([tonic_plugin.executable], transitive = [tools])
 
@@ -352,7 +356,7 @@ def _rust_prost_toolchain_impl(ctx):
     is_tonic = ctx.attr.tonic_runtime != None
 
     proto_lang_toolchain = proto_common.ProtoLangToolchainInfo(
-        out_replacement_format_flag = "--tonic_out=%s" if is_tonic else "--prost_out=%s",
+        out_replacement_format_flag = "--prost_out=%s",
         plugin_format_flag = ctx.attr.prost_plugin_flag,
         plugin = ctx.attr.prost_plugin[DefaultInfo].files_to_run,
         runtime = ctx.attr.prost_runtime,
@@ -360,7 +364,7 @@ def _rust_prost_toolchain_impl(ctx):
         proto_compiler = ctx.attr._prost_process_wrapper[DefaultInfo].files_to_run,
         protoc_opts = ctx.fragments.proto.experimental_protoc_opts,
         progress_message = "",
-        mnemonic = "ToncGenProto" if is_tonic else "ProstGenProto",
+        mnemonic = "TonicGenProto" if is_tonic else "ProstGenProto",
     )
 
     tonic_attrs = [ctx.attr.tonic_plugin_flag, ctx.attr.tonic_plugin, ctx.attr.tonic_runtime]

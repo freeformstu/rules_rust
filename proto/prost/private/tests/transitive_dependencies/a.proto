@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
-import "proto/prost/private/tests/proto/a/b/b.proto";
+import "b/b.proto";
 
 package a;
 

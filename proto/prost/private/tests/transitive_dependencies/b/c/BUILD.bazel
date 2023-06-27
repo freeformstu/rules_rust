@@ -9,7 +9,7 @@ proto_library(
     srcs = [
         "c.proto",
     ],
-    strip_import_prefix = "/proto/prost/private/tests/proto",
+    strip_import_prefix = "/proto/prost/private/tests/transitive_dependencies",
     deps = [
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",

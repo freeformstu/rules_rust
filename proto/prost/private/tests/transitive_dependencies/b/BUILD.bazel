@@ -9,8 +9,9 @@ proto_library(
     srcs = [
         "b.proto",
     ],
+    strip_import_prefix = "/proto/prost/private/tests/transitive_dependencies",
     deps = [
-        "//proto/prost/private/tests/proto/a/b/c:c_proto",
+        "//proto/prost/private/tests/transitive_dependencies/b/c:c_proto",
         "@com_google_protobuf//:empty_proto",
     ],
 )

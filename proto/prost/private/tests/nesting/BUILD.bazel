@@ -1,0 +1,40 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//proto/prost:defs.bzl", "rust_tonic_library")
+load("//rust:defs.bzl", "rust_test")
+
+package(default_visibility = ["//proto/prost/private/tests:__subpackages__"])
+
+proto_library(
+    name = "nested_messages_proto",
+    srcs = [
+        "nested_messages.proto",
+    ],
+    deps = [
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:api_proto",
+        "@com_google_protobuf//:compiler_plugin_proto",
+        "@com_google_protobuf//:descriptor_proto",
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:empty_proto",
+        "@com_google_protobuf//:field_mask_proto",
+        "@com_google_protobuf//:source_context_proto",
+        "@com_google_protobuf//:struct_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:type_proto",
+        "@com_google_protobuf//:wrappers_proto",
+    ],
+)
+
+rust_tonic_library(
+    name = "nested_messages_rs_proto",
+    proto = ":nested_messages_proto",
+)
+
+rust_test(
+    name = "nested_messages_test",
+    srcs = ["nested_messages_test.rs"],
+    edition = "2021",
+    deps = [
+        ":nested_messages_rs_proto",
+    ],
+)

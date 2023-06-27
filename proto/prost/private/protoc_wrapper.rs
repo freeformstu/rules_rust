@@ -11,6 +11,7 @@ use std::process;
 
 type ProtocResult<T> = Result<T, String>;
 
+/// Convert a `std::io::Error` to a `String`.
 fn from_error<T: ToString>(e: T) -> String {
     format!("IO error: {}", e.to_string())
 }
@@ -239,7 +240,7 @@ fn compute_proto_package_info(
             .spawn()
             .expect("Failed to spawn protoc")
             .wait_with_output()
-            .expect("Faild to wait on protoc");
+            .expect("Failed to wait on protoc");
 
         // check success
         if !output.status.success() {
@@ -347,6 +348,12 @@ impl Args {
                 continue;
             }
 
+            if arg == "--is_tonic" {
+                is_tonic = true;
+                println!("IS TONIC");
+                continue;
+            }
+
             if !arg.contains('=') {
                 extra_args.push(arg);
                 continue;
@@ -354,7 +361,7 @@ impl Args {
 
             let part = arg
                 .split_once('=')
-                .ok_or_else(|| format!("Failed to parse argument `{arg}`",))?;
+                .ok_or_else(|| format!("Failed to parse argument `{arg}`"))?;
             match part {
                 ("--protoc", value) => {
                     protoc = Some(PathBuf::from(value));
@@ -364,7 +371,6 @@ impl Args {
                 }
                 ("--tonic_out", value) => {
                     out_dir = Some(PathBuf::from(value));
-                    is_tonic = true;
                 }
                 ("--crate_name", value) => {
                     crate_name = Some(value.to_string());
@@ -469,11 +475,11 @@ fn main() -> ProtocResult<()> {
     cmd.args(extra_args);
     cmd.args(&proto_files);
 
-    let status = cmd.status().map_err(from_error)?;
-    if !status.success() {
+    let output = cmd.output().map_err(from_error)?;
+    if !output.status.success() {
         return Err(format!(
             "protoc failed with status: {}",
-            status.code().expect("failed to get exit code")
+            String::from_utf8_lossy(&output.stderr)
         ));
     }
 
