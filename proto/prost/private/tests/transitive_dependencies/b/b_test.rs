@@ -1,3 +1,5 @@
+//! Tests transitive dependencies.
+
 use b_proto::a::b::B;
 use c_proto::a::b::c::C;
 

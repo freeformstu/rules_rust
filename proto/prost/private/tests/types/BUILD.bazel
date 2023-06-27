@@ -5,22 +5,22 @@ load("//rust:defs.bzl", "rust_test")
 package(default_visibility = ["//proto/prost/private/tests:__subpackages__"])
 
 proto_library(
-    name = "nested_messages_proto",
+    name = "types_proto",
     srcs = [
-        "nested_messages.proto",
+        "types.proto",
     ],
 )
 
 rust_prost_library(
-    name = "nested_messages_rs_proto",
-    proto = ":nested_messages_proto",
+    name = "types_rs_proto",
+    proto = ":types_proto",
 )
 
 rust_test(
-    name = "nested_messages_test",
-    srcs = ["nested_messages_test.rs"],
+    name = "types_test",
+    srcs = ["types_test.rs"],
     edition = "2021",
     deps = [
-        ":nested_messages_rs_proto",
+        ":types_rs_proto",
     ],
 )

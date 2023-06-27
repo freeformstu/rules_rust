@@ -6,6 +6,12 @@ crates_vendor(
     annotations = {
         "protoc-gen-prost": [crate.annotation(
             gen_binaries = ["protoc-gen-prost"],
+            patch_args = [
+                "-p1",
+            ],
+            patches = [
+                "@rules_rust//proto/prost/private/3rdparty/patches:protoc-gen-prost.patch",
+            ],
         )],
         "protoc-gen-tonic": [crate.annotation(
             gen_binaries = ["protoc-gen-tonic"],

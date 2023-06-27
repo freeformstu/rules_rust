@@ -17,8 +17,6 @@ package wkt;
 
 message WellKnownTypes {
 
-  string name = 50;
-
   // Any
   google.protobuf.Any any = 1;
 

@@ -1,3 +1,5 @@
+//! Tests variations of the package name, including empty package names.
+
 use pkg_a_b_proto::pkg::a::b::Message as PkgABMessage;
 use pkg_a_proto::pkg::a::Message as PkgAMessage;
 use pkg_empty_proto::Message as PkgEmptyMessage;

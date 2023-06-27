@@ -1,3 +1,5 @@
+//! Tests transitive dependencies.
+
 use any_proto::google::protobuf::Any;
 use c_proto::a::b::c::C;
 use duration_proto::google::protobuf::Duration;

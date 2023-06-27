@@ -1048,6 +1048,12 @@ def crate_repositories():
     maybe(
         http_archive,
         name = "rules_rust_prost__protoc-gen-prost-0.2.2",
+        patch_args = [
+            "-p1",
+        ],
+        patches = [
+            "@rules_rust//proto/prost/private/3rdparty/patches:protoc-gen-prost.patch",
+        ],
         sha256 = "a81e3a9bb429fec47008b209896f0b9ab99fbcbc1c3733b385d43fbfd64dd2ca",
         type = "tar.gz",
         urls = ["https://crates.io/api/v1/crates/protoc-gen-prost/0.2.2/download"],
