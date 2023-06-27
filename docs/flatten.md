@@ -31,6 +31,7 @@
 * [rust_library](#rust_library)
 * [rust_library_group](#rust_library_group)
 * [rust_proc_macro](#rust_proc_macro)
+* [rust_prost_library](#rust_prost_library)
 * [rust_proto_library](#rust_proto_library)
 * [rust_proto_repositories](#rust_proto_repositories)
 * [rust_proto_toolchain](#rust_proto_toolchain)
@@ -43,6 +44,7 @@
 * [rust_stdlib_filegroup](#rust_stdlib_filegroup)
 * [rust_test](#rust_test)
 * [rust_test_suite](#rust_test_suite)
+* [rust_tonic_library](#rust_tonic_library)
 * [rust_toolchain](#rust_toolchain)
 * [rust_toolchain_repository](#rust_toolchain_repository)
 * [rust_toolchain_repository_proxy](#rust_toolchain_repository_proxy)
@@ -1792,6 +1794,25 @@ Registers the default toolchains for the `rules_rust` [bindgen][bg] rules.
 | <a id="rust_bindgen_register_toolchains-register_toolchains"></a>register_toolchains |  Whether or not to register toolchains.   |  `True` |
 
 
+<a id="rust_prost_library"></a>
+
+## rust_prost_library
+
+<pre>
+rust_prost_library(<a href="#rust_prost_library-name">name</a>, <a href="#rust_prost_library-kwargs">kwargs</a>)
+</pre>
+
+A rule for generating a Rust library using Prost.
+
+**PARAMETERS**
+
+
+| Name  | Description | Default Value |
+| :------------- | :------------- | :------------- |
+| <a id="rust_prost_library-name"></a>name |  The name of the target.   |  none |
+| <a id="rust_prost_library-kwargs"></a>kwargs |  Additional keyword arguments for the underlying <code>rust_prost_library</code> rule.   |  none |
+
+
 <a id="rust_proto_repositories"></a>
 
 ## rust_proto_repositories
@@ -1994,6 +2015,25 @@ rust_test_suite(
 | <a id="rust_test_suite-name"></a>name |  The name of the <code>test_suite</code>.   |  none |
 | <a id="rust_test_suite-srcs"></a>srcs |  All test sources, typically <code>glob(["tests/**/*.rs"])</code>.   |  none |
 | <a id="rust_test_suite-kwargs"></a>kwargs |  Additional keyword arguments for the underyling [rust_test](#rust_test) targets. The <code>tags</code> argument is also passed to the generated <code>test_suite</code> target.   |  none |
+
+
+<a id="rust_tonic_library"></a>
+
+## rust_tonic_library
+
+<pre>
+rust_tonic_library(<a href="#rust_tonic_library-name">name</a>, <a href="#rust_tonic_library-kwargs">kwargs</a>)
+</pre>
+
+A rule for generating a Rust library using Prost and Tonic.
+
+**PARAMETERS**
+
+
+| Name  | Description | Default Value |
+| :------------- | :------------- | :------------- |
+| <a id="rust_tonic_library-name"></a>name |  The name of the target.   |  none |
+| <a id="rust_tonic_library-kwargs"></a>kwargs |  Additional keyword arguments for the underlying <code>rust_tonic_library</code> rule.   |  none |
 
 
 <a id="rust_toolchain_repository"></a>

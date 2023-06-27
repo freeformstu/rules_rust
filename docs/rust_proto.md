@@ -6,6 +6,8 @@
 * [rust_proto_repositories](#rust_proto_repositories)
 * [rust_proto_transitive_repositories](#rust_proto_transitive_repositories)
 * [rust_proto_toolchain](#rust_proto_toolchain)
+* [rust_prost_library](#rust_prost_library)
+* [rust_tonic_library](#rust_tonic_library)
 
 
 ## Overview
@@ -260,6 +262,25 @@ See @rules_rust//proto:BUILD for examples of defining the toolchain.
 | <a id="rust_proto_toolchain-protoc"></a>protoc |  The location of the <code>protoc</code> binary. It should be an executable target.   | <a href="https://bazel.build/concepts/labels">Label</a> | optional | <code>@com_google_protobuf//:protoc</code> |
 
 
+<a id="rust_prost_library"></a>
+
+## rust_prost_library
+
+<pre>
+rust_prost_library(<a href="#rust_prost_library-name">name</a>, <a href="#rust_prost_library-kwargs">kwargs</a>)
+</pre>
+
+A rule for generating a Rust library using Prost.
+
+**PARAMETERS**
+
+
+| Name  | Description | Default Value |
+| :------------- | :------------- | :------------- |
+| <a id="rust_prost_library-name"></a>name |  The name of the target.   |  none |
+| <a id="rust_prost_library-kwargs"></a>kwargs |  Additional keyword arguments for the underlying <code>rust_prost_library</code> rule.   |  none |
+
+
 <a id="rust_proto_repositories"></a>
 
 ## rust_proto_repositories
@@ -290,5 +311,24 @@ Load transitive dependencies of the `@rules_rust//proto` rules.
 
 This macro should be called immediately after the `rust_proto_repositories` macro.
 
+
+
+<a id="rust_tonic_library"></a>
+
+## rust_tonic_library
+
+<pre>
+rust_tonic_library(<a href="#rust_tonic_library-name">name</a>, <a href="#rust_tonic_library-kwargs">kwargs</a>)
+</pre>
+
+A rule for generating a Rust library using Prost and Tonic.
+
+**PARAMETERS**
+
+
+| Name  | Description | Default Value |
+| :------------- | :------------- | :------------- |
+| <a id="rust_tonic_library-name"></a>name |  The name of the target.   |  none |
+| <a id="rust_tonic_library-kwargs"></a>kwargs |  Additional keyword arguments for the underlying <code>rust_tonic_library</code> rule.   |  none |
 
 
