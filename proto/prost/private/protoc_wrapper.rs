@@ -607,7 +607,7 @@ fn main() {
 }
 
 /// Rust built-in keywords and reserved keywords.
-const RUST_KEYWORDS: [&'static str; 51] = [
+const RUST_KEYWORDS: [&str; 51] = [
     "abstract", "as", "async", "await", "become", "box", "break", "const", "continue", "crate",
     "do", "dyn", "else", "enum", "extern", "false", "final", "fn", "for", "if", "impl", "in",
     "let", "loop", "macro", "match", "mod", "move", "mut", "override", "priv", "pub", "ref",
