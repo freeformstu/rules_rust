@@ -26,7 +26,9 @@ fn find_generated_rust_files(out_dir: &Path) -> BTreeSet<PathBuf> {
         } else if let Some(name) = path.file_name() {
             if name == "_" {
                 let rs_name = path.parent().expect("Failed to get parent").join("_.rs");
-                fs::rename(&path, &rs_name).expect("Failed to rename file");
+                fs::rename(&path, &rs_name).unwrap_or_else(|err| {
+                    panic!("Failed to rename file: {err:?}: {path:?} -> {rs_name:?}")
+                });
                 all_rs_files.insert(rs_name);
             }
         }
@@ -531,7 +533,9 @@ fn main() {
                 if real_tonic_file.exists() {
                     continue;
                 }
-                fs::rename(tonic_file, real_tonic_file).expect("Failed to rename file.");
+                fs::rename(tonic_file, &real_tonic_file).unwrap_or_else(|err| {
+                    panic!("Failed to rename file: {err:?}: {tonic_file:?} -> {real_tonic_file:?}")
+                });
             } else {
                 let rs_file = PathBuf::from(format!(
                     "{}.rs",
