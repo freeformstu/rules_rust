@@ -186,8 +186,10 @@ fn write_module(
     let is_rust_module = module.name != "_";
 
     if is_rust_module {
+        println!("Writing module: {}", module.name);
+        let rust_module_name = escape_keyword(module.name.clone());
         content
-            .write_str(&format!("{}pub mod {} {{\n", indent, module.name))
+            .write_str(&format!("{}pub mod {} {{\n", indent, rust_module_name))
             .expect("Failed to write string");
     }
 
@@ -601,6 +603,28 @@ fn main() {
     }
 }
 
+/// Rust built-in keywords and reserved keywords.
+const RUST_KEYWORDS: [&'static str; 51] = [
+    "abstract", "as", "async", "await", "become", "box", "break", "const", "continue", "crate",
+    "do", "dyn", "else", "enum", "extern", "false", "final", "fn", "for", "if", "impl", "in",
+    "let", "loop", "macro", "match", "mod", "move", "mut", "override", "priv", "pub", "ref",
+    "return", "self", "Self", "static", "struct", "super", "trait", "true", "try", "type",
+    "typeof", "unsafe", "unsized", "use", "virtual", "where", "while", "yield",
+];
+
+/// Returns true if the given string is a Rust keyword.
+fn is_keyword(s: &str) -> bool {
+    RUST_KEYWORDS.contains(&s)
+}
+
+/// Escapes a Rust keyword by prefixing it with `r#`.
+fn escape_keyword(s: String) -> String {
+    if is_keyword(&s) {
+        return format!("r#{s}");
+    }
+    s
+}
+
 #[cfg(test)]
 mod test {
 
@@ -637,5 +661,41 @@ google.protobuf.DescriptorProto     free: 11-INF
             ".google.protobuf.FileDescriptorSet=crate_name::google::protobuf::FileDescriptorSet"
         ].into_iter().map(String::from).collect::<BTreeSet<String>>()
     );
+    }
+
+    #[test]
+    fn is_keyword_test() {
+        let non_keywords = [
+            "foo", "bar", "baz", "qux", "quux", "corge", "grault", "garply", "waldo", "fred",
+            "plugh", "xyzzy", "thud",
+        ];
+        for non_keyword in &non_keywords {
+            assert!(!is_keyword(non_keyword));
+        }
+
+        for keyword in &RUST_KEYWORDS {
+            assert!(is_keyword(keyword));
+        }
+    }
+
+    #[test]
+    fn escape_keyword_test() {
+        let non_keywords = [
+            "foo", "bar", "baz", "qux", "quux", "corge", "grault", "garply", "waldo", "fred",
+            "plugh", "xyzzy", "thud",
+        ];
+        for non_keyword in &non_keywords {
+            assert_eq!(
+                escape_keyword(non_keyword.to_string()),
+                non_keyword.to_owned()
+            );
+        }
+
+        for keyword in &RUST_KEYWORDS {
+            assert_eq!(
+                escape_keyword(keyword.to_string()),
+                format!("r#{}", keyword)
+            );
+        }
     }
 }
