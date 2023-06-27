@@ -186,7 +186,6 @@ fn write_module(
     let is_rust_module = module.name != "_";
 
     if is_rust_module {
-        println!("Writing module: {}", module.name);
         let rust_module_name = escape_keyword(module.name.clone());
         content
             .write_str(&format!("{}pub mod {} {{\n", indent, rust_module_name))
@@ -414,9 +413,6 @@ impl Args {
                     rustfmt = Some(PathBuf::from(value));
                 }
                 ("--proto_path", value) => {
-                    // if value.ends_with("import_proto") {
-                    //     continue;
-                    // }
                     proto_paths.push(value.to_string());
                 }
                 (arg, value) => {
@@ -536,17 +532,22 @@ fn main() {
                     continue;
                 }
                 fs::rename(tonic_file, &real_tonic_file).unwrap_or_else(|err| {
-                    panic!("Failed to rename file: {err:?}: {tonic_file:?} -> {real_tonic_file:?}")
+                    panic!("Failed to rename file: {err:?}: {tonic_file:?} -> {real_tonic_file:?}");
                 });
             } else {
-                let rs_file = PathBuf::from(format!(
+                let rs_file_str = format!(
                     "{}.rs",
                     tonic_file
                         .to_str()
                         .expect("Failed to convert to str")
                         .strip_suffix(".tonic.rs")
                         .expect("Failed to strip suffix.")
-                ));
+                );
+                let rs_file = PathBuf::from(&rs_file_str)
+                    .canonicalize()
+                    .unwrap_or_else(|err| {
+                        panic!("Failed to canonicalize path: {err:?}: {rs_file_str:?}")
+                    });
 
                 if rs_file.exists() {
                     let rs_content = fs::read_to_string(&rs_file).expect("Failed to read file.");
@@ -554,7 +555,9 @@ fn main() {
                         fs::read_to_string(tonic_file).expect("Failed to read file.");
                     fs::write(tonic_file, format!("{}\n{}", rs_content, tonic_content))
                         .expect("Failed to write file.");
-                    fs::remove_file(&rs_file).expect("Failed to remove file.");
+                    fs::remove_file(&rs_file).unwrap_or_else(|err| {
+                        panic!("Failed to remove file: {err:?}: {rs_file:?}")
+                    });
                 }
             }
         }

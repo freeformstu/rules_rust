@@ -11,4 +11,4 @@ def rust_prost_register_toolchains(register_toolchains = True):
     """Register toolchains for Rust Prost rules."""
 
     if register_toolchains:
-        native.register_toolchains(str(Label("//proto/prost:default_prost_toolchain")))
+        native.register_toolchains("@rules_rust//proto/prost/...")

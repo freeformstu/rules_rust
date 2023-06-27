@@ -35,9 +35,21 @@ rust_prost_toolchain(
 )
 
 toolchain(
-    name = "default_prost_toolchain",
+    name = "default_prost_toolchain_linux",
     toolchain = "default_prost_toolchain_impl",
     toolchain_type = "//proto/prost:toolchain_type",
+    target_compatible_with = [
+        "@platforms//os:linux",
+    ],
+)
+
+toolchain(
+    name = "default_prost_toolchain_osx",
+    toolchain = "default_prost_toolchain_impl",
+    toolchain_type = "//proto/prost:toolchain_type",
+    target_compatible_with = [
+        "@platforms//os:osx",
+    ],
 )
 
 bzl_library(

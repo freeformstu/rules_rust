@@ -342,15 +342,43 @@ def _make_rust_prost_library_rule(doc, is_tonic):
         },
     )
 
-rust_tonic_library = _make_rust_prost_library_rule(
+rust_tonic_library_rule = _make_rust_prost_library_rule(
     doc = "A rule for generating a Rust library using Prost and Tonic.",
     is_tonic = True,
 )
 
-rust_prost_library = _make_rust_prost_library_rule(
+rust_prost_library_rule = _make_rust_prost_library_rule(
     doc = "A rule for generating a Rust library using Prost.",
     is_tonic = False,
 )
+
+def rust_tonic_library(name, **kwargs):
+    """A rule for generating a Rust library using Prost and Tonic.
+
+    See `rust_tonic_library` for more details.
+    """
+    rust_tonic_library_rule(
+        name = name,
+        target_compatible_with = kwargs.pop("target_compatible_with", select({
+            "@platforms//os:windows": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+        })),
+        **kwargs
+    )
+
+def rust_prost_library(name, **kwargs):
+    """A rule for generating a Rust library using Prost and Tonic.
+
+    See `rust_prost_library` for more details.
+    """
+    rust_prost_library_rule(
+        name = name,
+        target_compatible_with = kwargs.pop("target_compatible_with", select({
+            "@platforms//os:windows": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+        })),
+        **kwargs
+    )
 
 def _rust_prost_toolchain_impl(ctx):
     is_tonic = ctx.attr.tonic_runtime != None

@@ -10,5 +10,5 @@ message C {
 
   google.protobuf.Any any = 3;
 
-  google.protobuf.Duration duration = 4;  
+  google.protobuf.Duration duration = 4;
 }
