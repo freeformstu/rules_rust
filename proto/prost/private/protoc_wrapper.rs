@@ -2,12 +2,12 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::env;
-use std::fmt::Write;
+use std::fmt::{Display, Formatter, Write};
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process;
+use std::{env, fmt};
 
 use prost::Message;
 use prost_types::{
@@ -238,9 +238,9 @@ impl ProtoPath {
     }
 }
 
-impl ToString for ProtoPath {
-    fn to_string(&self) -> String {
-        self.0.clone()
+impl Display for ProtoPath {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -270,9 +270,9 @@ impl RustModulePath {
     }
 }
 
-impl ToString for RustModulePath {
-    fn to_string(&self) -> String {
-        self.0.clone()
+impl Display for RustModulePath {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
@@ -735,9 +735,7 @@ fn main() {
         package_info_file,
         extern_paths
             .into_iter()
-            .map(|(proto_path, rust_path)| {
-                format!(".{}={}", proto_path.to_string(), rust_path.to_string())
-            })
+            .map(|(proto_path, rust_path)| format!(".{}={}", proto_path, rust_path))
             .collect::<Vec<_>>()
             .join("\n"),
     )
