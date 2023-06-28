@@ -401,6 +401,9 @@ struct Args {
     /// The name of the crate.
     crate_name: String,
 
+    /// The bazel label.
+    label: String,
+
     /// The path to the package info file.
     package_info_file: PathBuf,
 
@@ -442,6 +445,7 @@ impl Args {
         let mut out_librs: Option<PathBuf> = None;
         let mut rustfmt: Option<PathBuf> = None;
         let mut proto_paths = Vec::new();
+        let mut label: Option<String> = None;
         let mut is_tonic = false;
 
         let mut extra_args = Vec::new();
@@ -522,6 +526,9 @@ impl Args {
                 ("--proto_path", value) => {
                     proto_paths.push(value.to_string());
                 }
+                ("--label", value) => {
+                    label = Some(value.to_string());
+                }
                 (arg, value) => {
                     extra_args.push(format!("{}={}", arg, value));
                 }
@@ -557,6 +564,12 @@ impl Args {
                     .to_string(),
             );
         }
+        if label.is_none() {
+            return Err(
+                "No `--label` value was found. Unable to parse the label of the target crate."
+                    .to_string(),
+            );
+        }
 
         Ok(Args {
             protoc: protoc.unwrap(),
@@ -570,9 +583,36 @@ impl Args {
             rustfmt,
             proto_paths,
             is_tonic,
+            label: label.unwrap(),
             extra_args,
         })
     }
+}
+
+/// Get the output directory with the label suffixed.
+fn get_output_dir(out_dir: &Path, label: &str) -> PathBuf {
+    let label_as_path = label
+        .replace('@', "")
+        .replace("//", "_")
+        .replace("/", "_")
+        .replace(":", "_");
+    PathBuf::from(format!(
+        "{}/prost-build-{}",
+        out_dir.display(),
+        label_as_path
+    ))
+}
+
+/// Get the output directory with the label suffixed, and create it if it doesn't exist.
+///
+/// This will remove the directory first if it already exists.
+fn get_and_create_output_dir(out_dir: &Path, label: &str) -> PathBuf {
+    let out_dir = get_output_dir(&out_dir, &label);
+    if out_dir.exists() {
+        fs::remove_dir_all(&out_dir).expect("Failed to remove old output directory");
+    }
+    fs::create_dir_all(&out_dir).expect("Failed to create output directory");
+    out_dir
 }
 
 fn main() {
@@ -583,6 +623,7 @@ fn main() {
         protoc,
         out_dir,
         crate_name,
+        label,
         package_info_file,
         proto_files,
         includes,
@@ -593,6 +634,8 @@ fn main() {
         is_tonic,
         extra_args,
     } = Args::parse().expect("Failed to parse args");
+
+    let out_dir = get_and_create_output_dir(&out_dir, &label);
 
     let mut cmd = process::Command::new(&protoc);
     cmd.arg(format!("--prost_out={}", out_dir.display()));

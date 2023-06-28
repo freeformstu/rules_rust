@@ -10,14 +10,30 @@ load("//rust/private:providers.bzl", "DepVariantInfo")
 load("//rust/private:rustc.bzl", "rustc_compile_action")
 load(":providers.bzl", "ProstProtoInfo", "TonicProtoInfo")
 
-PROST_EXTENSION = ".rs"
-TONIC_EXTENSION = ".tonic.rs"
-
 RUST_EDITION = "2021"
+
+TOOLCHAIN_TYPE = "@rules_rust//proto/prost:toolchain_type"
+
+def _create_proto_lang_toolchain(ctx, prost_toolchain):
+    is_tonic = prost_toolchain.tonic_runtime != None
+
+    proto_lang_toolchain = proto_common.ProtoLangToolchainInfo(
+        out_replacement_format_flag = "--prost_out=%s",
+        plugin_format_flag = prost_toolchain.prost_plugin_flag,
+        plugin = prost_toolchain.prost_plugin[DefaultInfo].files_to_run,
+        runtime = prost_toolchain.prost_runtime,
+        provided_proto_sources = depset(),
+        proto_compiler = ctx.attr._prost_process_wrapper[DefaultInfo].files_to_run,
+        protoc_opts = prost_toolchain.protoc_opts,
+        progress_message = "",
+        mnemonic = "TonicGenProto" if is_tonic else "ProstGenProto",
+    )
+
+    return proto_lang_toolchain
 
 def _compile_proto(ctx, crate_name, proto_info, deps, prost_toolchain, is_tonic, rustfmt_toolchain = None):
     kind = "tonic" if is_tonic else "prost"
-    extension = TONIC_EXTENSION if is_tonic else PROST_EXTENSION
+    extension = ".tonic.rs" if is_tonic else ".rs"
     provider = TonicProtoInfo if is_tonic else ProstProtoInfo
 
     deps_info_file = ctx.actions.declare_file(ctx.label.name + ".{}_deps_info".format(kind))
@@ -37,6 +53,7 @@ def _compile_proto(ctx, crate_name, proto_info, deps, prost_toolchain, is_tonic,
 
     # Prost process wrapper specific args
     additional_args.add("--protoc={}".format(proto_compiler.executable.path))
+    additional_args.add("--label={}".format(ctx.label))
     additional_args.add("--out_librs={}".format(lib_rs.path))
     additional_args.add("--package_info_output={}".format("{}={}".format(crate_name, package_info_file.path)))
     additional_args.add("--deps_info={}".format(deps_info_file.path))
@@ -68,7 +85,7 @@ def _compile_proto(ctx, crate_name, proto_info, deps, prost_toolchain, is_tonic,
         additional_inputs = additional_inputs,
         additional_args = additional_args,
         generated_files = [lib_rs, package_info_file],
-        proto_lang_toolchain_info = prost_toolchain.proto_lang_toolchain,
+        proto_lang_toolchain_info = _create_proto_lang_toolchain(ctx, prost_toolchain),
         plugin_output = ctx.bin_dir.path,
     )
 
@@ -283,12 +300,18 @@ def _make_rust_prost_aspect(doc, is_tonic):
                 allow_single_file = True,
                 cfg = "exec",
             ),
+            "_prost_process_wrapper": attr.label(
+                doc = "The wrapper script for the Prost protoc plugin.",
+                cfg = "exec",
+                executable = True,
+                default = Label("//proto/prost/private:protoc_wrapper"),
+            ),
         },
         fragments = ["cpp"],
         host_fragments = ["cpp"],
         toolchains = [
+            TOOLCHAIN_TYPE,
             "@bazel_tools//tools/cpp:toolchain_type",
-            "@rules_rust//proto/prost:toolchain_type",
             "@rules_rust//rust:toolchain_type",
             "@rules_rust//rust/rustfmt:toolchain_type",
         ],
@@ -345,59 +368,17 @@ def _make_rust_prost_library_rule(doc, is_tonic):
         },
     )
 
-rust_tonic_library_rule = _make_rust_prost_library_rule(
+rust_tonic_library = _make_rust_prost_library_rule(
     doc = "A rule for generating a Rust library using Prost and Tonic.",
     is_tonic = True,
 )
 
-rust_prost_library_rule = _make_rust_prost_library_rule(
+rust_prost_library = _make_rust_prost_library_rule(
     doc = "A rule for generating a Rust library using Prost.",
     is_tonic = False,
 )
 
-def rust_tonic_library(name, **kwargs):
-    """A rule for generating a Rust library using Prost and Tonic.
-
-    See `rust_tonic_library` for more details.
-    """
-    rust_tonic_library_rule(
-        name = name,
-        target_compatible_with = kwargs.pop("target_compatible_with", select({
-            "@platforms//os:windows": ["@platforms//:incompatible"],
-            "//conditions:default": [],
-        })),
-        **kwargs
-    )
-
-def rust_prost_library(name, **kwargs):
-    """A rule for generating a Rust library using Prost and Tonic.
-
-    See `rust_prost_library` for more details.
-    """
-    rust_prost_library_rule(
-        name = name,
-        target_compatible_with = kwargs.pop("target_compatible_with", select({
-            "@platforms//os:windows": ["@platforms//:incompatible"],
-            "//conditions:default": [],
-        })),
-        **kwargs
-    )
-
 def _rust_prost_toolchain_impl(ctx):
-    is_tonic = ctx.attr.tonic_runtime != None
-
-    proto_lang_toolchain = proto_common.ProtoLangToolchainInfo(
-        out_replacement_format_flag = "--prost_out=%s",
-        plugin_format_flag = ctx.attr.prost_plugin_flag,
-        plugin = ctx.attr.prost_plugin[DefaultInfo].files_to_run,
-        runtime = ctx.attr.prost_runtime,
-        provided_proto_sources = depset(),
-        proto_compiler = ctx.attr._prost_process_wrapper[DefaultInfo].files_to_run,
-        protoc_opts = ctx.fragments.proto.experimental_protoc_opts,
-        progress_message = "",
-        mnemonic = "TonicGenProto" if is_tonic else "ProstGenProto",
-    )
-
     tonic_attrs = [ctx.attr.tonic_plugin_flag, ctx.attr.tonic_plugin, ctx.attr.tonic_runtime]
     if any(tonic_attrs) and not all(tonic_attrs):
         fail("When one tonic attribute is added, all must be added")
@@ -407,8 +388,8 @@ def _rust_prost_toolchain_impl(ctx):
         prost_plugin = ctx.attr.prost_plugin,
         prost_plugin_flag = ctx.attr.prost_plugin_flag,
         prost_runtime = ctx.attr.prost_runtime,
+        prost_types = ctx.attr.prost_types,
         proto_compiler = ctx.attr.proto_compiler,
-        proto_lang_toolchain = proto_lang_toolchain,
         protoc_opts = ctx.fragments.proto.experimental_protoc_opts,
         tonic_opts = ctx.attr.tonic_opts,
         tonic_plugin = ctx.attr.tonic_plugin,
@@ -439,6 +420,11 @@ rust_prost_toolchain = rule(
             providers = [[rust_common.crate_info], [rust_common.crate_group_info]],
             mandatory = True,
         ),
+        "prost_types": attr.label(
+            doc = "The Prost types crates to use.",
+            providers = [[rust_common.crate_info], [rust_common.crate_group_info]],
+            mandatory = True,
+        ),
         "proto_compiler": attr.label(
             doc = "The protoc compiler to use.",
             cfg = "exec",
@@ -460,11 +446,33 @@ rust_prost_toolchain = rule(
             doc = "The Tonic runtime crates to use.",
             providers = [[rust_common.crate_info], [rust_common.crate_group_info]],
         ),
-        "_prost_process_wrapper": attr.label(
-            doc = "The wrapper script for the Prost protoc plugin.",
-            cfg = "exec",
-            executable = True,
-            default = Label("//proto/prost/private:protoc_wrapper"),
-        ),
     },
+)
+
+def _current_prost_runtime_impl(ctx):
+    toolchain = ctx.toolchains[TOOLCHAIN_TYPE]
+
+    runtime_deps = []
+
+    for target in [toolchain.prost_runtime, toolchain.prost_types]:
+        if rust_common.crate_group_info in target:
+            crate_group_info = target[rust_common.crate_group_info]
+            runtime_deps.extend(crate_group_info.dep_variant_infos.to_list())
+        else:
+            runtime_deps.append(DepVariantInfo(
+                crate_info = target[rust_common.crate_info] if rust_common.crate_info in target else None,
+                dep_info = target[rust_common.dep_info] if rust_common.dep_info in target else None,
+                cc_info = target[CcInfo] if CcInfo in target else None,
+                build_info = None,
+            ))
+
+    return [rust_common.crate_group_info(
+        dep_variant_infos = depset(runtime_deps),
+    )]
+
+current_prost_runtime = rule(
+    doc = "A rule for accessing the current Prost toolchain components needed by the process wrapper",
+    provides = [rust_common.crate_group_info],
+    implementation = _current_prost_runtime_impl,
+    toolchains = [TOOLCHAIN_TYPE],
 )
