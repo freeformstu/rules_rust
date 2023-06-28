@@ -594,8 +594,7 @@ fn get_output_dir(out_dir: &Path, label: &str) -> PathBuf {
     let label_as_path = label
         .replace('@', "")
         .replace("//", "_")
-        .replace("/", "_")
-        .replace(":", "_");
+        .replace(['/', ':'], "_");
     PathBuf::from(format!(
         "{}/prost-build-{}",
         out_dir.display(),
@@ -607,7 +606,7 @@ fn get_output_dir(out_dir: &Path, label: &str) -> PathBuf {
 ///
 /// This will remove the directory first if it already exists.
 fn get_and_create_output_dir(out_dir: &Path, label: &str) -> PathBuf {
-    let out_dir = get_output_dir(&out_dir, &label);
+    let out_dir = get_output_dir(out_dir, label);
     if out_dir.exists() {
         fs::remove_dir_all(&out_dir).expect("Failed to remove old output directory");
     }
