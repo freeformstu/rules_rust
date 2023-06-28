@@ -9,6 +9,9 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::process;
 
+use prost::Message;
+use prost_types::{DescriptorProto, EnumDescriptorProto, FileDescriptorProto, FileDescriptorSet};
+
 /// Locate prost outputs in the protoc output directory.
 fn find_generated_rust_files(out_dir: &Path) -> BTreeSet<PathBuf> {
     let mut all_rs_files: BTreeSet<PathBuf> = BTreeSet::new();
@@ -212,82 +215,142 @@ fn write_module(
     }
 }
 
-/// Create a map of proto files to their free field number strings.
-///
-/// We use the free field numbers api as a convenient way to get a list of all message types in a
-/// proto file.
-fn create_free_field_numbers_map(
-    proto_files: BTreeSet<PathBuf>,
-    protoc: &Path,
-    includes: &[String],
-    proto_paths: &[String],
-) -> BTreeMap<PathBuf, String> {
-    proto_files
-        .into_iter()
-        .map(|proto_file| {
-            let output = process::Command::new(protoc)
-                .args(includes.iter().map(|include| format!("-I{}", include)))
-                .arg("--print_free_field_numbers")
-                .args(
-                    proto_paths
-                        .iter()
-                        .map(|proto_path| format!("--proto_path={}", proto_path)),
-                )
-                .arg(&proto_file)
-                .stdout(process::Stdio::piped())
-                .spawn()
-                .expect("Failed to spawn protoc")
-                .wait_with_output()
-                .expect("Failed to wait on protoc");
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+struct ProtoPath(String);
 
-            // check success
-            if !output.status.success() {
-                panic!(
-                    "Failed to run protoc: {}",
-                    std::str::from_utf8(&output.stderr).expect("Failed to parse stderr")
-                );
-            }
+impl ProtoPath {
+    fn join(&self, path: &str) -> ProtoPath {
+        if self.0.is_empty() {
+            return ProtoPath(path.to_string());
+        }
 
-            let stdout = std::str::from_utf8(&output.stdout).expect("Failed to parse stdout");
-            (proto_file, stdout.to_owned())
-        })
-        .collect()
+        ProtoPath(format!("{}.{}", self.0, path))
+    }
+}
+
+impl ToString for ProtoPath {
+    fn to_string(&self) -> String {
+        self.0.clone()
+    }
+}
+
+impl From<&str> for ProtoPath {
+    fn from(path: &str) -> Self {
+        ProtoPath(path.to_string())
+    }
+}
+
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+struct RustModulePath(String);
+
+impl RustModulePath {
+    fn join(&self, path: &str) -> RustModulePath {
+        if self.0.is_empty() {
+            return RustModulePath(path.to_string());
+        }
+
+        RustModulePath(format!("{}::{}", self.0, path))
+    }
+}
+
+impl ToString for RustModulePath {
+    fn to_string(&self) -> String {
+        self.0.clone()
+    }
+}
+
+impl From<&str> for RustModulePath {
+    fn from(path: &str) -> Self {
+        RustModulePath(path.to_string())
+    }
 }
 
 /// Compute the `--extern_path` flags for a list of proto files. This is
 /// expected to convert proto files into a list of
 /// `.example.prost.helloworld=crate_name::example::prost::helloworld`
-fn compute_proto_package_info(
-    proto_free_field_numbers: &BTreeMap<PathBuf, String>,
+fn get_extern_paths(
+    descriptor_set_path: &PathBuf,
     crate_name: &str,
-) -> Result<BTreeSet<String>, String> {
-    let mut extern_paths = BTreeSet::new();
-    for stdout in proto_free_field_numbers.values() {
-        for line in stdout.lines() {
-            let text = line.trim();
-            if text.is_empty() {
-                continue;
-            }
+) -> Result<BTreeMap<ProtoPath, RustModulePath>, String> {
+    let mut extern_paths = BTreeMap::new();
+    let rust_path = RustModulePath(crate_name.to_string());
 
-            let (absolute, _) = text
-                .split_once(' ')
-                .expect("Failed to split free field number line");
+    let descriptor_set_bytes =
+        fs::read(descriptor_set_path).expect("Failed to read descriptor set");
+    let descriptor_set = FileDescriptorSet::decode(descriptor_set_bytes.as_slice())
+        .expect("Failed to decode descriptor set");
 
-            let mut package = "";
-            let mut symbol_name = absolute;
-            if let Some((package_, symbol_name_)) = absolute.rsplit_once('.') {
-                package = package_;
-                symbol_name = symbol_name_;
-            }
-            let symbol = format!("{}::{}", package.replace('.', "::"), symbol_name);
-            let extern_path = format!(".{}={}::{}", absolute, crate_name, symbol.trim_matches(':'));
-            if !extern_paths.insert(extern_path.clone()) {
-                return Err(format!("Duplicate extern: {}", extern_path));
-            }
-        }
+    for file in descriptor_set.file.iter() {
+        descriptor_set_file_to_extern_paths(&mut extern_paths, &rust_path, file);
     }
 
     Ok(extern_paths)
+}
+
+///
+fn descriptor_set_file_to_extern_paths(
+    extern_paths: &mut BTreeMap<ProtoPath, RustModulePath>,
+    rust_path: &RustModulePath,
+    file: &FileDescriptorProto,
+) {
+    let package = file.package.clone().unwrap_or_default();
+    let rust_path = rust_path.join(&package.replace('.', "::"));
+    let proto_path = ProtoPath(package);
+
+    for message_type in file.message_type.iter() {
+        message_type_to_extern_paths(extern_paths, &proto_path, &rust_path, message_type);
+    }
+
+    for enum_type in file.enum_type.iter() {
+        enum_type_to_extern_paths(extern_paths, &proto_path, &rust_path, enum_type);
+    }
+}
+
+/// Add the extern_path pairs for a message descriptor type.
+fn message_type_to_extern_paths(
+    extern_paths: &mut BTreeMap<ProtoPath, RustModulePath>,
+    proto_path: &ProtoPath,
+    rust_path: &RustModulePath,
+    message_type: &DescriptorProto,
+) {
+    let message_type_name = message_type
+        .name
+        .as_ref()
+        .expect("Failed to get message type name");
+
+    extern_paths.insert(
+        proto_path.join(message_type_name),
+        rust_path.join(message_type_name),
+    );
+
+    let name_lower = message_type_name.to_lowercase();
+    let proto_path = proto_path.join(&name_lower);
+    let rust_path = rust_path.join(&name_lower);
+
+    for nested_type in message_type.nested_type.iter() {
+        message_type_to_extern_paths(extern_paths, &proto_path, &rust_path, nested_type)
+    }
+
+    for enum_type in message_type.enum_type.iter() {
+        enum_type_to_extern_paths(extern_paths, &proto_path, &rust_path, enum_type);
+    }
+}
+
+/// Add the extern_path pairs for an enum type.
+fn enum_type_to_extern_paths(
+    extern_paths: &mut BTreeMap<ProtoPath, RustModulePath>,
+    proto_path: &ProtoPath,
+    rust_path: &RustModulePath,
+    enum_type: &EnumDescriptorProto,
+) {
+    let enum_type_name = enum_type
+        .name
+        .as_ref()
+        .expect("Failed to get enum type name");
+    extern_paths.insert(
+        proto_path.join(enum_type_name),
+        rust_path.join(enum_type_name),
+    );
 }
 
 /// The parsed command-line arguments.
@@ -309,6 +372,9 @@ struct Args {
 
     /// The include directories.
     includes: Vec<String>,
+
+    /// Dependency descriptor sets.
+    descriptor_set: PathBuf,
 
     /// The path to the generated lib.rs file.
     out_librs: PathBuf,
@@ -335,6 +401,7 @@ impl Args {
         let mut package_info_file: Option<PathBuf> = None;
         let mut proto_files: Vec<PathBuf> = Vec::new();
         let mut includes = Vec::new();
+        let mut descriptor_set = None;
         let mut out_librs: Option<PathBuf> = None;
         let mut rustfmt: Option<PathBuf> = None;
         let mut proto_paths = Vec::new();
@@ -406,6 +473,9 @@ impl Args {
                         }
                     }
                 }
+                ("--descriptor_set", value) => {
+                    descriptor_set = Some(PathBuf::from(value));
+                }
                 ("--out_librs", value) => {
                     out_librs = Some(PathBuf::from(value));
                 }
@@ -444,6 +514,12 @@ impl Args {
         if out_librs.is_none() {
             return Err("No `--out_librs` value was found. Unable to parse the output location for all combined prost outputs.".to_string());
         }
+        if descriptor_set.is_none() {
+            return Err(
+                "No `--descriptor_set` value was found. Unable to parse descriptor set path."
+                    .to_string(),
+            );
+        }
 
         Ok(Args {
             protoc: protoc.unwrap(),
@@ -452,6 +528,7 @@ impl Args {
             package_info_file: package_info_file.unwrap(),
             proto_files,
             includes,
+            descriptor_set: descriptor_set.unwrap(),
             out_librs: out_librs.unwrap(),
             rustfmt,
             proto_paths,
@@ -472,6 +549,7 @@ fn main() {
         package_info_file,
         proto_files,
         includes,
+        descriptor_set,
         out_librs,
         rustfmt,
         proto_paths,
@@ -564,27 +642,25 @@ fn main() {
     }
 
     // Locate all prost-generated outputs.
-    let rust_files: BTreeSet<PathBuf> = find_generated_rust_files(&out_dir);
+    let rust_files = find_generated_rust_files(&out_dir);
     if rust_files.is_empty() {
         panic!("No .rs files were generated by prost.");
     }
 
-    let free_field_numbers = create_free_field_numbers_map(
-        proto_files.into_iter().collect::<BTreeSet<_>>(),
-        &protoc,
-        &includes,
-        &proto_paths,
-    );
-
-    let package_info: BTreeSet<String> =
-        compute_proto_package_info(&free_field_numbers, &crate_name)
-            .expect("Failed to compute proto package info");
+    let extern_paths = get_extern_paths(&descriptor_set, &crate_name)
+        .expect("Failed to compute proto package info");
 
     // Write outputs
     fs::write(&out_librs, generate_lib_rs(&rust_files, is_tonic)).expect("Failed to write file.");
     fs::write(
         package_info_file,
-        package_info.into_iter().collect::<Vec<_>>().join("\n"),
+        extern_paths
+            .into_iter()
+            .map(|(proto_path, rust_path)| {
+                format!(".{}={}", proto_path.to_string(), rust_path.to_string())
+            })
+            .collect::<Vec<_>>()
+            .join("\n"),
     )
     .expect("Failed to write file.");
 
@@ -633,37 +709,130 @@ mod test {
 
     use super::*;
 
-    use std::collections::{BTreeMap, BTreeSet};
+    use std::collections::BTreeMap;
 
     #[test]
-    fn compute_proto_package_info_test() {
-        // Example output from running `protoc --print_free_field_numbers` on
-        // https://github.com/protocolbuffers/protobuf/blob/v23.3/src/google/protobuf/descriptor.proto
-        let free_field_numbers_output = r"
-google.protobuf.FileDescriptorSet   free: 2-INF
-google.protobuf.FileDescriptorProto free: 13-INF
-google.protobuf.DescriptorProto.ExtensionRange free: 4-INF
-google.protobuf.DescriptorProto.ReservedRange free: 3-INF
-google.protobuf.DescriptorProto     free: 11-INF
-"
-        .to_owned();
-        let package_infos = compute_proto_package_info(
-            &BTreeMap::from([(
-                PathBuf::from("/tmp/google/protobuf/descriptor.proto"),
-                free_field_numbers_output,
-            )]),
-            "crate_name",
-        )
-        .unwrap();
+    fn enum_type_to_extern_paths_test() {
+        let enum_descriptor = EnumDescriptorProto {
+            name: Some("Foo".to_string()),
+            ..EnumDescriptorProto::default()
+        };
 
-        assert_eq!(package_infos, [
-            ".google.protobuf.DescriptorProto.ExtensionRange=crate_name::google::protobuf::DescriptorProto::ExtensionRange",
-            ".google.protobuf.DescriptorProto.ReservedRange=crate_name::google::protobuf::DescriptorProto::ReservedRange",
-            ".google.protobuf.DescriptorProto=crate_name::google::protobuf::DescriptorProto",
-            ".google.protobuf.FileDescriptorProto=crate_name::google::protobuf::FileDescriptorProto",
-            ".google.protobuf.FileDescriptorSet=crate_name::google::protobuf::FileDescriptorSet"
-        ].into_iter().map(String::from).collect::<BTreeSet<String>>()
-    );
+        {
+            let mut extern_paths = BTreeMap::new();
+            enum_type_to_extern_paths(
+                &mut extern_paths,
+                &ProtoPath::from("bar"),
+                &RustModulePath::from("bar"),
+                &enum_descriptor,
+            );
+
+            assert_eq!(extern_paths.len(), 1);
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.Foo")),
+                Some(&RustModulePath::from("bar::Foo"))
+            );
+        }
+
+        {
+            let mut extern_paths = BTreeMap::new();
+            enum_type_to_extern_paths(
+                &mut extern_paths,
+                &ProtoPath::from("bar.baz"),
+                &RustModulePath::from("bar::baz"),
+                &enum_descriptor,
+            );
+
+            assert_eq!(extern_paths.len(), 1);
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.baz.Foo")),
+                Some(&RustModulePath::from("bar::baz::Foo"))
+            );
+        }
+    }
+
+    #[test]
+    fn message_type_to_extern_paths_test() {
+        let message_descriptor = DescriptorProto {
+            name: Some("Foo".to_string()),
+            nested_type: vec![
+                DescriptorProto {
+                    name: Some("Bar".to_string()),
+                    ..DescriptorProto::default()
+                },
+                DescriptorProto {
+                    name: Some("Nested".to_string()),
+                    nested_type: vec![DescriptorProto {
+                        name: Some("Baz".to_string()),
+                        enum_type: vec![EnumDescriptorProto {
+                            name: Some("Chuck".to_string()),
+                            ..EnumDescriptorProto::default()
+                        }],
+                        ..DescriptorProto::default()
+                    }],
+                    ..DescriptorProto::default()
+                },
+            ],
+            enum_type: vec![EnumDescriptorProto {
+                name: Some("Qux".to_string()),
+                ..EnumDescriptorProto::default()
+            }],
+            ..DescriptorProto::default()
+        };
+
+        {
+            let mut extern_paths = BTreeMap::new();
+            message_type_to_extern_paths(
+                &mut extern_paths,
+                &ProtoPath::from("bar"),
+                &RustModulePath::from("bar"),
+                &message_descriptor,
+            );
+            assert_eq!(extern_paths.len(), 6);
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.Foo")),
+                Some(&RustModulePath::from("bar::Foo"))
+            );
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.foo.Bar")),
+                Some(&RustModulePath::from("bar::foo::Bar"))
+            );
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.foo.Nested")),
+                Some(&RustModulePath::from("bar::foo::Nested"))
+            );
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.foo.nested.Baz")),
+                Some(&RustModulePath::from("bar::foo::nested::Baz"))
+            );
+        }
+
+        {
+            let mut extern_paths = BTreeMap::new();
+            message_type_to_extern_paths(
+                &mut extern_paths,
+                &ProtoPath::from("bar.bob"),
+                &RustModulePath::from("bar::bob"),
+                &message_descriptor,
+            );
+            assert_eq!(extern_paths.len(), 6);
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.bob.Foo")),
+                Some(&RustModulePath::from("bar::bob::Foo"))
+            );
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.bob.foo.Bar")),
+                Some(&RustModulePath::from("bar::bob::foo::Bar"))
+            );
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.bob.foo.Nested")),
+                Some(&RustModulePath::from("bar::bob::foo::Nested"))
+            );
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.bob.foo.nested.Baz")),
+                Some(&RustModulePath::from("bar::bob::foo::nested::Baz"))
+            );
+        }
     }
 
     #[test]

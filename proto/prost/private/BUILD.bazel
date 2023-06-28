@@ -11,6 +11,10 @@ rust_binary(
         "TONIC_EXTENSION": TONIC_EXTENSION,
     },
     visibility = ["//visibility:public"],
+    deps = [
+        "//proto/prost/private/3rdparty/crates:prost",
+        "//proto/prost/private/3rdparty/crates:prost-types",
+    ],
 )
 
 rust_test(

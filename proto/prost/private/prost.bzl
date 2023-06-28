@@ -41,6 +41,7 @@ def _compile_proto(ctx, crate_name, proto_info, deps, prost_toolchain, is_tonic,
     additional_args.add("--package_info_output={}".format("{}={}".format(crate_name, package_info_file.path)))
     additional_args.add("--deps_info={}".format(deps_info_file.path))
     additional_args.add("--prost_opt=compile_well_known_types")
+    additional_args.add("--descriptor_set={}".format(proto_info.direct_descriptor_set.path))
     additional_args.add_all(prost_toolchain.prost_opts, format_each = "--prost_opt=%s")
 
     if is_tonic:
@@ -58,7 +59,7 @@ def _compile_proto(ctx, crate_name, proto_info, deps, prost_toolchain, is_tonic,
         additional_args.add("--rustfmt={}".format(rustfmt_toolchain.rustfmt.path))
         tools = depset(transitive = [tools, rustfmt_toolchain.all_files])
 
-    additional_inputs = depset([deps_info_file] + [dep[provider].package_info for dep in deps])
+    additional_inputs = depset([deps_info_file, proto_info.direct_descriptor_set] + [dep[provider].package_info for dep in deps])
 
     proto_common.compile(
         actions = ctx.actions,
@@ -203,10 +204,12 @@ def _rust_prost_aspect_impl(target, ctx):
 
     crate_name = ctx.label.name.replace("-", "_").replace("/", "_")
 
+    proto_info = target[ProtoInfo]
+
     lib_rs, package_info_file = _compile_proto(
         ctx = ctx,
         crate_name = crate_name,
-        proto_info = target[ProtoInfo],
+        proto_info = proto_info,
         deps = proto_deps,
         prost_toolchain = prost_toolchain,
         is_tonic = ctx.attr._is_tonic,
