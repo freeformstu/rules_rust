@@ -1,5 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("//proto:defs.bzl", "rust_prost_library")
+load("//proto:defs.bzl", "rust_tonic_library")
+load("//rust:defs.bzl", "rust_test")
 
 proto_library(
     name = "bytestream_proto",
@@ -7,7 +8,16 @@ proto_library(
     visibility = ["//visibility:public"],
 )
 
-rust_prost_library(
+rust_tonic_library(
     name = "bytestream_rs_proto",
     proto = ":bytestream_proto",
+)
+
+rust_test(
+    name = "bytestream_test",
+    srcs = ["bytestream_test.rs"],
+    edition = "2021",
+    deps = [
+        ":bytestream_rs_proto",
+    ],
 )

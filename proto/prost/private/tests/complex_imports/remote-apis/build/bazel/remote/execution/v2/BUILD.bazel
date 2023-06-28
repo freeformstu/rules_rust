@@ -1,5 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_rust//proto/prost:defs.bzl", "rust_tonic_library")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 proto_library(
     name = "remoteexecution_proto",
@@ -20,7 +21,16 @@ proto_library(
 )
 
 rust_tonic_library(
-    name = "remoteexecution_tonic_proto",
+    name = "remoteexecution_rs_proto",
     proto = ":remoteexecution_proto",
     visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "remoteexecution_test",
+    srcs = ["remoteexecution_test.rs"],
+    edition = "2021",
+    deps = [
+        ":remoteexecution_rs_proto",
+    ],
 )

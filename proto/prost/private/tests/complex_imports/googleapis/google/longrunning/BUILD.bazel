@@ -1,5 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
-load("//proto:defs.bzl", "rust_prost_library")
+load("//proto:defs.bzl", "rust_tonic_library")
+load("//rust:defs.bzl", "rust_test")
 
 proto_library(
     name = "longrunning_proto",
@@ -16,7 +17,16 @@ proto_library(
     ],
 )
 
-rust_prost_library(
+rust_tonic_library(
     name = "longrunning_rs_proto",
     proto = ":longrunning_proto",
+)
+
+rust_test(
+    name = "longrunning_test",
+    srcs = ["longrunning_test.rs"],
+    edition = "2021",
+    deps = [
+        ":longrunning_rs_proto",
+    ],
 )

@@ -1,5 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("//proto:defs.bzl", "rust_prost_library")
+load("//rust:defs.bzl", "rust_test")
 
 proto_library(
     name = "code_proto",
@@ -47,4 +48,15 @@ rust_prost_library(
 rust_prost_library(
     name = "status_rs_proto",
     proto = ":status_proto",
+)
+
+rust_test(
+    name = "rpc_test",
+    srcs = ["rpc_test.rs"],
+    edition = "2021",
+    deps = [
+        ":code_rs_proto",
+        ":error_details_rs_proto",
+        ":status_rs_proto",
+    ],
 )

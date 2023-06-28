@@ -1,5 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("//proto:defs.bzl", "rust_prost_library")
+load("//rust:defs.bzl", "rust_test")
 
 proto_library(
     name = "annotations_proto",
@@ -19,4 +20,13 @@ proto_library(
 rust_prost_library(
     name = "annotations_rs_proto",
     proto = ":annotations_proto",
+)
+
+rust_test(
+    name = "annotations_test",
+    srcs = ["annotations_test.rs"],
+    edition = "2021",
+    deps = [
+        ":annotations_rs_proto",
+    ],
 )

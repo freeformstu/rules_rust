@@ -1,5 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_rust//proto/prost:defs.bzl", "rust_prost_library")
+load("//rust:defs.bzl", "rust_test")
 
 proto_library(
     name = "semver_proto",
@@ -9,7 +10,16 @@ proto_library(
 )
 
 rust_prost_library(
-    name = "semver_prost_proto",
+    name = "semver_rs_proto",
     proto = ":semver_proto",
     visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "semver_test",
+    srcs = ["semver_test.rs"],
+    edition = "2021",
+    deps = [
+        ":semver_rs_proto",
+    ],
 )
