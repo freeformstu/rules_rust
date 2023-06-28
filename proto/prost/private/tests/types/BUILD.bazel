@@ -9,6 +9,7 @@ proto_library(
     srcs = [
         "types.proto",
     ],
+    strip_import_prefix = "/proto/prost/private/tests",
 )
 
 rust_prost_library(

@@ -12,6 +12,7 @@ proto_library(
     strip_import_prefix = "/proto/prost/private/tests/transitive_dependencies",
     deps = [
         "//proto/prost/private/tests/transitive_dependencies/b:b_proto",
+        "//proto/prost/private/tests/types:types_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",
     ],

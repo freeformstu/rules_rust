@@ -10,7 +10,10 @@ use std::path::PathBuf;
 use std::process;
 
 use prost::Message;
-use prost_types::{DescriptorProto, EnumDescriptorProto, FileDescriptorProto, FileDescriptorSet};
+use prost_types::{
+    DescriptorProto, EnumDescriptorProto, FileDescriptorProto, FileDescriptorSet,
+    OneofDescriptorProto,
+};
 
 /// Locate prost outputs in the protoc output directory.
 fn find_generated_rust_files(out_dir: &Path) -> BTreeSet<PathBuf> {
@@ -215,16 +218,23 @@ fn write_module(
     }
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+/// ProtoPath is a path to a proto message, enum, or oneof.
+///
+/// Example: `helloworld.Greeter.HelloRequest`
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 struct ProtoPath(String);
 
 impl ProtoPath {
-    fn join(&self, path: &str) -> ProtoPath {
+    /// Join a component to the end of the path.
+    fn join(&self, component: &str) -> ProtoPath {
         if self.0.is_empty() {
-            return ProtoPath(path.to_string());
+            return ProtoPath(component.to_string());
+        }
+        if component.is_empty() {
+            return self.clone();
         }
 
-        ProtoPath(format!("{}.{}", self.0, path))
+        ProtoPath(format!("{}.{}", self.0, component))
     }
 }
 
@@ -240,13 +250,20 @@ impl From<&str> for ProtoPath {
     }
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
+/// RustModulePath is a path to a rust module.
+///
+/// Example: `helloworld::greeter::HelloRequest`
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 struct RustModulePath(String);
 
 impl RustModulePath {
+    /// Join a path to the end of the module path.
     fn join(&self, path: &str) -> RustModulePath {
         if self.0.is_empty() {
             return RustModulePath(path.to_string());
+        }
+        if path.is_empty() {
+            return self.clone();
         }
 
         RustModulePath(format!("{}::{}", self.0, path))
@@ -266,8 +283,8 @@ impl From<&str> for RustModulePath {
 }
 
 /// Compute the `--extern_path` flags for a list of proto files. This is
-/// expected to convert proto files into a list of
-/// `.example.prost.helloworld=crate_name::example::prost::helloworld`
+/// expected to convert proto files into a BTreeMap of
+/// `example.prost.helloworld`: `crate_name::example::prost::helloworld`.
 fn get_extern_paths(
     descriptor_set_path: &PathBuf,
     crate_name: &str,
@@ -287,7 +304,7 @@ fn get_extern_paths(
     Ok(extern_paths)
 }
 
-///
+/// Add the extern_path pairs for a file descriptor type.
 fn descriptor_set_file_to_extern_paths(
     extern_paths: &mut BTreeMap<ProtoPath, RustModulePath>,
     rust_path: &RustModulePath,
@@ -334,6 +351,10 @@ fn message_type_to_extern_paths(
     for enum_type in message_type.enum_type.iter() {
         enum_type_to_extern_paths(extern_paths, &proto_path, &rust_path, enum_type);
     }
+
+    for oneof_type in message_type.oneof_decl.iter() {
+        oneof_type_to_extern_paths(extern_paths, &proto_path, &rust_path, oneof_type);
+    }
 }
 
 /// Add the extern_path pairs for an enum type.
@@ -350,6 +371,22 @@ fn enum_type_to_extern_paths(
     extern_paths.insert(
         proto_path.join(enum_type_name),
         rust_path.join(enum_type_name),
+    );
+}
+
+fn oneof_type_to_extern_paths(
+    extern_paths: &mut BTreeMap<ProtoPath, RustModulePath>,
+    proto_path: &ProtoPath,
+    rust_path: &RustModulePath,
+    oneof_type: &OneofDescriptorProto,
+) {
+    let oneof_type_name = oneof_type
+        .name
+        .as_ref()
+        .expect("Failed to get oneof type name");
+    extern_paths.insert(
+        proto_path.join(oneof_type_name),
+        rust_path.join(oneof_type_name),
     );
 }
 
@@ -712,6 +749,46 @@ mod test {
     use std::collections::BTreeMap;
 
     #[test]
+    fn oneof_type_to_extern_paths_test() {
+        let oneof_descriptor = OneofDescriptorProto {
+            name: Some("Foo".to_string()),
+            ..OneofDescriptorProto::default()
+        };
+
+        {
+            let mut extern_paths = BTreeMap::new();
+            oneof_type_to_extern_paths(
+                &mut extern_paths,
+                &ProtoPath::from("bar"),
+                &RustModulePath::from("bar"),
+                &oneof_descriptor,
+            );
+
+            assert_eq!(extern_paths.len(), 1);
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.Foo")),
+                Some(&RustModulePath::from("bar::Foo"))
+            );
+        }
+
+        {
+            let mut extern_paths = BTreeMap::new();
+            oneof_type_to_extern_paths(
+                &mut extern_paths,
+                &ProtoPath::from("bar.baz"),
+                &RustModulePath::from("bar::baz"),
+                &oneof_descriptor,
+            );
+
+            assert_eq!(extern_paths.len(), 1);
+            assert_eq!(
+                extern_paths.get(&ProtoPath::from("bar.baz.Foo")),
+                Some(&RustModulePath::from("bar::baz::Foo"))
+            );
+        }
+    }
+
+    #[test]
     fn enum_type_to_extern_paths_test() {
         let enum_descriptor = EnumDescriptorProto {
             name: Some("Foo".to_string()),
@@ -831,6 +908,60 @@ mod test {
             assert_eq!(
                 extern_paths.get(&ProtoPath::from("bar.bob.foo.nested.Baz")),
                 Some(&RustModulePath::from("bar::bob::foo::nested::Baz"))
+            );
+        }
+    }
+
+    #[test]
+    fn proto_path_test() {
+        {
+            let proto_path = ProtoPath::from("");
+            assert_eq!(proto_path.to_string(), "");
+            assert_eq!(proto_path.join("foo"), ProtoPath::from("foo"));
+        }
+        {
+            let proto_path = ProtoPath::from("foo");
+            assert_eq!(proto_path.to_string(), "foo");
+            assert_eq!(proto_path.join(""), ProtoPath::from("foo"));
+        }
+        {
+            let proto_path = ProtoPath::from("foo");
+            assert_eq!(proto_path.to_string(), "foo");
+            assert_eq!(proto_path.join("bar"), ProtoPath::from("foo.bar"));
+        }
+        {
+            let proto_path = ProtoPath::from("foo.bar");
+            assert_eq!(proto_path.to_string(), "foo.bar");
+            assert_eq!(proto_path.join("baz"), ProtoPath::from("foo.bar.baz"));
+        }
+    }
+
+    #[test]
+    fn rust_module_path_test() {
+        {
+            let rust_module_path = RustModulePath::from("");
+            assert_eq!(rust_module_path.to_string(), "");
+            assert_eq!(rust_module_path.join("foo"), RustModulePath::from("foo"));
+        }
+        {
+            let rust_module_path = RustModulePath::from("foo");
+            assert_eq!(rust_module_path.to_string(), "foo");
+            assert_eq!(rust_module_path.join(""), RustModulePath::from("foo"));
+        }
+        {
+            let rust_module_path = RustModulePath::from("foo");
+            assert_eq!(rust_module_path.to_string(), "foo");
+            assert_eq!(
+                rust_module_path.join("bar"),
+                RustModulePath::from("foo::bar")
+            );
+        }
+        {
+            let rust_module_path = RustModulePath::from("foo::bar");
+            assert_eq!(rust_module_path.to_string(), "foo::bar");
+            assert_eq!(
+                rust_module_path.join("baz"),
+                RustModulePath::from("foo::bar::baz")
             );
         }
     }

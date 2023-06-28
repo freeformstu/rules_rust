@@ -1,5 +1,5 @@
 use types_proto::Enum;
-use types_proto::Types;
+use types_proto::{types, Types};
 
 #[test]
 fn test_types() {
@@ -93,5 +93,6 @@ fn test_types() {
         ]
         .into_iter()
         .collect(),
+        one_of: Some(types::OneOf::OneofFloat(1.0)),
     };
 }

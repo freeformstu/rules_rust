@@ -5,6 +5,7 @@ use b_proto::a::b::B;
 use c_proto::a::b::c::C;
 use duration_proto::google::protobuf::Duration;
 use timestamp_proto::google::protobuf::Timestamp;
+use types_proto::Types;
 
 #[test]
 fn test_b() {
@@ -29,6 +30,7 @@ fn test_b() {
             nanos: 2,
         }),
         duration: Some(duration),
+        types: Some(Types::default()),
     };
 
     let b_ref = a.b.as_ref().unwrap();
