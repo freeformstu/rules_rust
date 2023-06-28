@@ -1,34 +1,14 @@
 diff --git a/src/lib.rs b/src/lib.rs
-index 43fc5ba..94b8f7e 100644
+index 43fc5ba..aa86fb0 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
-@@ -62,12 +62,12 @@ impl ModuleRequestSet {
-     {
-         let raw_protos = RawProtos::decode(raw_request)?;
- 
--        Ok(Self::new_decoded(
-+        Self::new_decoded(
-             input_protos,
-             proto_file,
-             raw_protos,
-             default_package_filename.unwrap_or("_"),
--        ))
-+        )
-     }
- 
-     fn new_decoded<I>(
-@@ -75,7 +75,7 @@ impl ModuleRequestSet {
-         proto_file: Vec<FileDescriptorProto>,
-         raw_protos: RawProtos,
-         default_package_filename: &str,
--    ) -> Self
-+    ) -> std::result::Result<Self, prost::DecodeError>
-     where
-         I: IntoIterator<Item = String>,
-     {
-@@ -86,24 +86,29 @@ impl ModuleRequestSet {
+@@ -84,19 +84,20 @@ impl ModuleRequestSet {
+         let requests = proto_file.into_iter().zip(raw_protos.proto_file).fold(
+             BTreeMap::new(),
              |mut acc, (proto, raw)| {
-                 let module = Module::from_protobuf_package_name(proto.package());
+-                let module = Module::from_protobuf_package_name(proto.package());
++                let proto_package = proto.package();
++                let module = Module::from_protobuf_package_name(proto_package);
                  let proto_filename = proto.name();
 -                let entry = acc.entry(module).or_insert_with(|| {
 -                    let mut request = ModuleRequest::new(proto.package().to_owned());
@@ -38,19 +18,15 @@ index 43fc5ba..94b8f7e 100644
 -                            package => format!("{package}.rs"),
 -                        };
 -                        request.with_output_filename(filename);
-+                let entry = acc
-+                    .entry(module)
-+                    .or_insert_with(|| ModuleRequest::new(proto.package().to_owned()));
-+
-+                if input_protos.contains(proto_filename) {
-+                    if entry.output_filename().is_some() {
-+                        // TODO: Make a result
-+                        panic!("duplicate files detected");
-                     }
+-                    }
 -                    request
 -                });
++                let entry = acc
++                    .entry(module)
++                    .or_insert_with(|| ModuleRequest::new(proto_package.to_owned()));
 +
-+                    let filename = match proto.package() {
++                if entry.output_filename().is_none() && input_protos.contains(proto_filename) {
++                    let filename = match proto_package {
 +                        "" => default_package_filename.to_owned(),
 +                        package => format!("{package}.rs"),
 +                    };
@@ -59,11 +35,3 @@ index 43fc5ba..94b8f7e 100644
  
                  entry.push_file_descriptor_proto(proto, raw);
                  acc
-             },
-         );
- 
--        Self { requests }
-+        Ok(Self { requests })
-     }
- 
-     /// An ordered iterator of all requests

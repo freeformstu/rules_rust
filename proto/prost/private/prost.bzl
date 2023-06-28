@@ -68,6 +68,7 @@ def _compile_proto(ctx, crate_name, proto_info, deps, prost_toolchain, is_tonic,
         tonic_plugin = prost_toolchain.tonic_plugin[DefaultInfo].files_to_run
         additional_args.add(prost_toolchain.tonic_plugin_flag % tonic_plugin.executable.path)
         additional_args.add("--tonic_opt=no_include")
+        additional_args.add("--tonic_opt=compile_well_known_types")
         additional_args.add("--is_tonic")
         additional_args.add_all(prost_toolchain.tonic_opts, format_each = "--tonic_opt=%s")
         tools = depset([tonic_plugin.executable], transitive = [tools])

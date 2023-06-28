@@ -13,6 +13,7 @@ proto_library(
         "//proto/prost/private/tests/complex_imports/remote-apis/build/bazel/semver:semver_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:empty_proto",
         "@com_google_protobuf//:timestamp_proto",
         "@com_google_protobuf//:wrappers_proto",
     ],

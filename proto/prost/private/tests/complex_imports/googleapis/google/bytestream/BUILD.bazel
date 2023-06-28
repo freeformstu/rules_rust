@@ -1,11 +1,13 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//proto:defs.bzl", "rust_prost_library")
 
 proto_library(
     name = "bytestream_proto",
     srcs = ["bytestream.proto"],
     visibility = ["//visibility:public"],
-    deps = [
-        "//proto/prost/private/tests/complex_imports/googleapis/google/api:annotations_proto",
-        "@com_google_protobuf//:wrappers_proto",
-    ],
+)
+
+rust_prost_library(
+    name = "bytestream_rs_proto",
+    proto = ":bytestream_proto",
 )

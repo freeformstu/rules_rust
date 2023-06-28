@@ -1,4 +1,5 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//proto:defs.bzl", "rust_prost_library")
 
 proto_library(
     name = "longrunning_proto",
@@ -13,4 +14,9 @@ proto_library(
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:empty_proto",
     ],
+)
+
+rust_prost_library(
+    name = "longrunning_rs_proto",
+    proto = ":longrunning_proto",
 )

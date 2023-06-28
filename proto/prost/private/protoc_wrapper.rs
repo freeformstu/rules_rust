@@ -446,6 +446,7 @@ impl Args {
         let mut rustfmt: Option<PathBuf> = None;
         let mut proto_paths = Vec::new();
         let mut label: Option<String> = None;
+        let mut tonic_or_prost_opts = Vec::new();
         let mut is_tonic = false;
 
         let mut extra_args = Vec::new();
@@ -510,7 +511,7 @@ impl Args {
                             .expect("Failed to read file")
                             .lines()
                         {
-                            extra_args.push(format!("--prost_opt=extern_path={}", flag.trim()));
+                            tonic_or_prost_opts.push(format!("extern_path={}", flag.trim()));
                         }
                     }
                 }
@@ -532,6 +533,13 @@ impl Args {
                 (arg, value) => {
                     extra_args.push(format!("{}={}", arg, value));
                 }
+            }
+        }
+
+        for tonic_or_prost_opt in tonic_or_prost_opts {
+            extra_args.push(format!("--prost_opt={}", tonic_or_prost_opt));
+            if is_tonic {
+                extra_args.push(format!("--tonic_opt={}", tonic_or_prost_opt));
             }
         }
 
@@ -667,46 +675,28 @@ fn main() {
         let tonic_files: BTreeSet<PathBuf> = find_generated_rust_files(&out_dir);
 
         for tonic_file in tonic_files.iter() {
-            if !tonic_file
+            let tonic_path_str = tonic_file.to_str().expect("Failed to convert to str");
+            let filename = tonic_file
                 .file_name()
-                .map(|os_name| {
-                    os_name
-                        .to_str()
-                        .map(|name| name.ends_with(".tonic.rs"))
-                        .unwrap_or(false)
-                })
-                .unwrap_or(false)
-            {
-                let real_tonic_file = PathBuf::from(format!(
-                    "{}.tonic.rs",
-                    tonic_file
-                        .to_str()
-                        .expect("Failed to convert to str")
-                        .strip_suffix(".rs")
-                        .expect("Failed to strip suffix.")
-                ));
-                if real_tonic_file.exists() {
-                    continue;
-                }
-                fs::rename(tonic_file, &real_tonic_file).unwrap_or_else(|err| {
-                    panic!("Failed to rename file: {err:?}: {tonic_file:?} -> {real_tonic_file:?}");
-                });
-            } else {
+                .expect("Failed to get file name")
+                .to_str()
+                .expect("Failed to convert to str");
+
+            let is_tonic_file = filename.ends_with(".tonic.rs");
+
+            if is_tonic_file {
                 let rs_file_str = format!(
                     "{}.rs",
-                    tonic_file
-                        .to_str()
-                        .expect("Failed to convert to str")
+                    tonic_path_str
                         .strip_suffix(".tonic.rs")
                         .expect("Failed to strip suffix.")
                 );
-                let rs_file = PathBuf::from(&rs_file_str)
-                    .canonicalize()
-                    .unwrap_or_else(|err| {
-                        panic!("Failed to canonicalize path: {err:?}: {rs_file_str:?}")
-                    });
+                let rs_file = PathBuf::from(&rs_file_str);
 
                 if rs_file.exists() {
+                    let rs_file = rs_file.canonicalize().unwrap_or_else(|err| {
+                        panic!("Failed to canonicalize path: {err:?}: {rs_file_str:?}")
+                    });
                     let rs_content = fs::read_to_string(&rs_file).expect("Failed to read file.");
                     let tonic_content =
                         fs::read_to_string(tonic_file).expect("Failed to read file.");
@@ -716,6 +706,19 @@ fn main() {
                         panic!("Failed to remove file: {err:?}: {rs_file:?}")
                     });
                 }
+            } else {
+                let real_tonic_file = PathBuf::from(format!(
+                    "{}.tonic.rs",
+                    tonic_path_str
+                        .strip_suffix(".rs")
+                        .expect("Failed to strip suffix.")
+                ));
+                if real_tonic_file.exists() {
+                    continue;
+                }
+                fs::rename(tonic_file, &real_tonic_file).unwrap_or_else(|err| {
+                    panic!("Failed to rename file: {err:?}: {tonic_file:?} -> {real_tonic_file:?}");
+                });
             }
         }
     }
@@ -735,7 +738,7 @@ fn main() {
         package_info_file,
         extern_paths
             .into_iter()
-            .map(|(proto_path, rust_path)| format!(".{}={}", proto_path, rust_path))
+            .map(|(proto_path, rust_path)| format!(".{}=::{}", proto_path, rust_path))
             .collect::<Vec<_>>()
             .join("\n"),
     )

@@ -1,4 +1,5 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//proto:defs.bzl", "rust_prost_library")
 
 proto_library(
     name = "code_proto",
@@ -31,4 +32,19 @@ proto_library(
     deps = [
         "@com_google_protobuf//:any_proto",
     ],
+)
+
+rust_prost_library(
+    name = "code_rs_proto",
+    proto = ":code_proto",
+)
+
+rust_prost_library(
+    name = "error_details_rs_proto",
+    proto = ":error_details_proto",
+)
+
+rust_prost_library(
+    name = "status_rs_proto",
+    proto = ":status_proto",
 )
