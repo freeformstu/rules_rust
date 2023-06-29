@@ -17,7 +17,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("//proto/3rdparty/crates:defs.bzl", "crate_repositories")
-load("//proto/prost:repositories.bzl", "rust_prost_dependencies", "rust_prost_register_toolchains")
+load("//proto/prost:repositories.bzl", "rust_prost_dependencies")
 
 def rust_proto_dependencies():
     maybe(
@@ -51,10 +51,8 @@ def rust_proto_dependencies():
     rust_prost_dependencies()
 
 # buildifier: disable=unnamed-macro
-def rust_proto_register_toolchains(register_proto_toolchains = True, register_prost_toolchains = True):
+def rust_proto_register_toolchains(register_proto_toolchains = True):
     """Register toolchains for proto compilation."""
-
-    rust_prost_register_toolchains(register_prost_toolchains)
 
     if register_proto_toolchains:
         native.register_toolchains(str(Label("//proto:default-proto-toolchain")))
@@ -70,4 +68,4 @@ def rust_proto_repositories(register_default_toolchain = True):
     """
 
     rust_proto_dependencies()
-    rust_proto_register_toolchains(register_proto_toolchains = register_default_toolchain, register_prost_toolchains = False)
+    rust_proto_register_toolchains(register_proto_toolchains = register_default_toolchain)

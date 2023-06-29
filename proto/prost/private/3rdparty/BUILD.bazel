@@ -10,6 +10,8 @@ crates_vendor(
                 "-p1",
             ],
             patches = [
+                # This patch is needed to handle duplicate package names.
+                # See: https://github.com/neoeinstein/protoc-gen-prost/issues/70
                 "@rules_rust//proto/prost/private/3rdparty/patches:protoc-gen-prost.patch",
             ],
         )],

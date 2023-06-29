@@ -4,10 +4,10 @@ load("@rules_proto//proto:defs.bzl", "ProtoInfo", "proto_common")
 load("//rust:defs.bzl", "rust_common")
 
 # buildifier: disable=bzl-visibility
-load("//rust/private:providers.bzl", "DepVariantInfo")
+load("//rust/private:rustc.bzl", "rustc_compile_action")
 
 # buildifier: disable=bzl-visibility
-load("//rust/private:rustc.bzl", "rustc_compile_action")
+load("//rust/private:utils.bzl", "can_build_metadata")
 load(":providers.bzl", "ProstProtoInfo", "TonicProtoInfo")
 
 RUST_EDITION = "2021"
@@ -17,6 +17,7 @@ TOOLCHAIN_TYPE = "@rules_rust//proto/prost:toolchain_type"
 def _create_proto_lang_toolchain(ctx, prost_toolchain):
     is_tonic = prost_toolchain.tonic_runtime != None
 
+    mnemonic = "TonicGenProto" if is_tonic else "ProstGenProto"
     proto_lang_toolchain = proto_common.ProtoLangToolchainInfo(
         out_replacement_format_flag = "--prost_out=%s",
         plugin_format_flag = prost_toolchain.prost_plugin_flag,
@@ -25,8 +26,8 @@ def _create_proto_lang_toolchain(ctx, prost_toolchain):
         provided_proto_sources = depset(),
         proto_compiler = ctx.attr._prost_process_wrapper[DefaultInfo].files_to_run,
         protoc_opts = prost_toolchain.protoc_opts,
-        progress_message = "",
-        mnemonic = "TonicGenProto" if is_tonic else "ProstGenProto",
+        progress_message = mnemonic + " %{label}",
+        mnemonic = mnemonic,
     )
 
     return proto_lang_toolchain
@@ -113,7 +114,7 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def _compile_rust(ctx, attr, crate_name, src, deps, edition):
+def _compile_rust(ctx, attr, crate_name, src, deps, edition, is_tonic):
     """Compiles a Rust source file.
 
     Args:
@@ -123,12 +124,13 @@ def _compile_rust(ctx, attr, crate_name, src, deps, edition):
       src (File): The crate root source file to be compiled.
       deps (List of DepVariantInfo): A list of dependencies needed.
       edition (str): The Rust edition to use.
+      is_tonic (bool): Whether or not the crate is a tonic library.
 
     Returns:
       A DepVariantInfo provider.
     """
     toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
-    output_hash = repr(hash(src.path))
+    output_hash = repr(hash(src.path + (".tonic" if is_tonic else ".prost")))
 
     lib_name = "{prefix}{name}-{lib_hash}{extension}".format(
         prefix = "lib",
@@ -145,7 +147,16 @@ def _compile_rust(ctx, attr, crate_name, src, deps, edition):
     )
 
     lib = ctx.actions.declare_file(lib_name)
-    rmeta = ctx.actions.declare_file(rmeta_name)
+    rmeta = None
+
+    if can_build_metadata(toolchain, ctx, "rlib"):
+        rmeta_name = "{prefix}{name}-{lib_hash}{extension}".format(
+            prefix = "lib",
+            name = crate_name,
+            lib_hash = output_hash,
+            extension = ".rmeta",
+        )
+        rmeta = ctx.actions.declare_file(rmeta_name)
 
     providers = rustc_compile_action(
         ctx = ctx,
@@ -175,7 +186,7 @@ def _compile_rust(ctx, attr, crate_name, src, deps, edition):
     dep_info = _get_dep_info(providers)
     cc_info = _get_cc_info(providers)
 
-    return DepVariantInfo(
+    return rust_common.dep_variant_info(
         crate_info = crate_info,
         dep_info = dep_info,
         cc_info = cc_info,
@@ -198,7 +209,7 @@ def _rust_prost_aspect_impl(target, ctx):
             crate_group_info = prost_runtime[rust_common.crate_group_info]
             runtime_deps.extend(crate_group_info.dep_variant_infos.to_list())
         else:
-            runtime_deps.append(DepVariantInfo(
+            runtime_deps.append(rust_common.dep_variant_info(
                 crate_info = prost_runtime[rust_common.crate_info] if rust_common.crate_info in prost_runtime else None,
                 dep_info = prost_runtime[rust_common.dep_info] if rust_common.dep_info in prost_runtime else None,
                 cc_info = prost_runtime[CcInfo] if CcInfo in prost_runtime else None,
@@ -241,6 +252,7 @@ def _rust_prost_aspect_impl(target, ctx):
         src = lib_rs,
         deps = deps,
         edition = RUST_EDITION,
+        is_tonic = ctx.attr._is_tonic,
     )
 
     return [
@@ -460,7 +472,7 @@ def _current_prost_runtime_impl(ctx):
             crate_group_info = target[rust_common.crate_group_info]
             runtime_deps.extend(crate_group_info.dep_variant_infos.to_list())
         else:
-            runtime_deps.append(DepVariantInfo(
+            runtime_deps.append(rust_common.dep_variant_info(
                 crate_info = target[rust_common.crate_info] if rust_common.crate_info in target else None,
                 dep_info = target[rust_common.dep_info] if rust_common.dep_info in target else None,
                 cc_info = target[CcInfo] if CcInfo in target else None,

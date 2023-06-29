@@ -20,6 +20,8 @@ load("@rules_rust//proto:transitive_repositories.bzl", "rust_proto_transitive_re
 
 rust_proto_transitive_repositories()
 
+register_toolchains("@rules_rust//proto/prost/private/...")
+
 load("@rules_rust//bindgen:repositories.bzl", "rust_bindgen_dependencies", "rust_bindgen_register_toolchains")
 
 rust_bindgen_dependencies()

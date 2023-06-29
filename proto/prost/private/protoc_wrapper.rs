@@ -479,15 +479,12 @@ impl Args {
                 continue;
             }
 
-            let part = arg.split_once('=').expect("Failed to split argument on =");
-            match part {
+            let parts = arg.split_once('=').expect("Failed to split argument on =");
+            match parts {
                 ("--protoc", value) => {
                     protoc = Some(PathBuf::from(value));
                 }
                 ("--prost_out", value) => {
-                    out_dir = Some(PathBuf::from(value));
-                }
-                ("--tonic_out", value) => {
                     out_dir = Some(PathBuf::from(value));
                 }
                 ("--crate_name", value) => {
@@ -694,9 +691,6 @@ fn main() {
                 let rs_file = PathBuf::from(&rs_file_str);
 
                 if rs_file.exists() {
-                    let rs_file = rs_file.canonicalize().unwrap_or_else(|err| {
-                        panic!("Failed to canonicalize path: {err:?}: {rs_file_str:?}")
-                    });
                     let rs_content = fs::read_to_string(&rs_file).expect("Failed to read file.");
                     let tonic_content =
                         fs::read_to_string(tonic_file).expect("Failed to read file.");
