@@ -22,8 +22,6 @@ and [`tonic`] dependencies respectively.
 [protobuf]: https://developers.google.com/protocol-buffers/
 [grpc]: https://grpc.io
 [`rust-protobuf`]: https://github.com/stepancheg/rust-protobuf/
-[`prost`]: https://github.com/tokio-rs/prost
-[`tonic`]: https://github.com/hyperium/tonic
 
 See the [protobuf example](../examples/proto) for a more complete example of use.
 
@@ -130,7 +128,14 @@ configuration.
 ## <a name="custom-prost-deps">Customizing `prost` and `tonic` Dependencies
 
 These rules depend on the [`prost`] and [`tonic`] dependencies. To setup the necessary toolchain
-for these rules, you must define a toolchain with the `prost`, `prost-types`, `tonic`, `protoc`, `protoc-gen-prost`, and `protoc-gen-tonic` crates.
+for these rules, you must define a toolchain with the [`prost`], [`prost-types`], [`tonic`],[`protoc-gen-prost`], and [`protoc-gen-tonic`] crates as well as the [`protoc`] binary.
+
+[`prost`]: https://crates.io/crates/prost
+[`prost-types`]: https://crates.io/crates/prost-types
+[`protoc-gen-prost`]: https://crates.io/crates/protoc-gen-prost
+[`protoc-gen-tonic`]: https://crates.io/crates/protoc-gen-tonic
+[`tonic`]: https://crates.io/crates/tonic
+[`protoc`]: https://github.com/protocolbuffers/protobuf
 
 To get access to these crates, you can use the [crate_universe](./crate_universe.md) repository
 rules. For example:
@@ -224,8 +229,6 @@ Lastly, you must register the toolchain in your `WORKSPACE` file. For example:
 ```python
 register_toolchains("//toolchains:prost_toolchain")
 ```
-
-
 
 
 <a id="rust_grpc_library"></a>
