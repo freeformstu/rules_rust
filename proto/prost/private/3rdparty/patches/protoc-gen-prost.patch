@@ -1,14 +1,10 @@
-diff --git a/src/lib.rs b/src/lib.rs
-index 43fc5ba..aa86fb0 100644
---- a/src/lib.rs
-+++ b/src/lib.rs
-@@ -84,19 +84,20 @@ impl ModuleRequestSet {
-         let requests = proto_file.into_iter().zip(raw_protos.proto_file).fold(
-             BTreeMap::new(),
+diff --git a/protoc-gen-prost/src/lib.rs b/protoc-gen-prost/src/lib.rs
+index 43fc5ba..2098949 100644
+--- a/protoc-gen-prost/src/lib.rs
++++ b/protoc-gen-prost/src/lib.rs
+@@ -86,17 +86,17 @@ impl ModuleRequestSet {
              |mut acc, (proto, raw)| {
--                let module = Module::from_protobuf_package_name(proto.package());
-+                let proto_package = proto.package();
-+                let module = Module::from_protobuf_package_name(proto_package);
+                 let module = Module::from_protobuf_package_name(proto.package());
                  let proto_filename = proto.name();
 -                let entry = acc.entry(module).or_insert_with(|| {
 -                    let mut request = ModuleRequest::new(proto.package().to_owned());
@@ -23,10 +19,10 @@ index 43fc5ba..aa86fb0 100644
 -                });
 +                let entry = acc
 +                    .entry(module)
-+                    .or_insert_with(|| ModuleRequest::new(proto_package.to_owned()));
++                    .or_insert_with(|| ModuleRequest::new(proto.package().to_owned()));
 +
 +                if entry.output_filename().is_none() && input_protos.contains(proto_filename) {
-+                    let filename = match proto_package {
++                    let filename = match proto.package() {
 +                        "" => default_package_filename.to_owned(),
 +                        package => format!("{package}.rs"),
 +                    };
