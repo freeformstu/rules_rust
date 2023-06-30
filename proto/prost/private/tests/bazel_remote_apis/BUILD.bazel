@@ -1,0 +1,32 @@
+load("@rules_rust//proto/prost:defs.bzl", "rust_prost_library", "rust_tonic_library")
+load("//rust:defs.bzl", "rust_test")
+
+rust_tonic_library(
+    name = "remote_execution_rs_proto",
+    proto = "@bazel_remote_apis//build/bazel/remote/execution/v2:remote_execution_proto",
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "remote_execution_test",
+    srcs = ["remote_execution_test.rs"],
+    edition = "2021",
+    deps = [
+        ":remote_execution_rs_proto",
+    ],
+)
+
+rust_prost_library(
+    name = "semver_rs_proto",
+    proto = "@bazel_remote_apis//build/bazel/semver:semver_proto",
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "semver_test",
+    srcs = ["semver_test.rs"],
+    edition = "2021",
+    deps = [
+        ":semver_rs_proto",
+    ],
+)

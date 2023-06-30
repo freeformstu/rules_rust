@@ -1,6 +1,6 @@
 //! Tests the remote execution protos.
 
-use remoteexecution_proto::build::bazel::remote::execution::v2::Digest;
+use remote_execution_proto::build::bazel::remote::execution::v2::Digest;
 
 #[test]
 fn test_remote_execution() {

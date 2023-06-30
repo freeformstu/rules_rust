@@ -45,3 +45,29 @@ def rules_rust_test_deps():
         name = "rules_rust_toolchain_test_target_json",
         target_json = Label("//test/unit/toolchain:toolchain-test-triple.json"),
     )
+
+    maybe(
+        http_archive,
+        name = "bazel_remote_apis",
+        urls = ["https://github.com/bazelbuild/remote-apis/archive/068363a3625e166056c155f6441cfb35ca8dfbf2.zip"],
+        sha256 = "34263013f19e6161195747dc0d3293f8bf65c8fed1f60ba40d4246c4f8008de1",
+        strip_prefix = "remote-apis-068363a3625e166056c155f6441cfb35ca8dfbf2",
+        workspace_file_content = "exports_files(['external/BUILD.googleapis'])",
+    )
+
+    maybe(
+        http_archive,
+        name = "googleapis",
+        build_file = "@bazel_remote_apis//:external/BUILD.googleapis",
+        sha256 = "7b6ea252f0b8fb5cd722f45feb83e115b689909bbb6a393a873b6cbad4ceae1d",
+        strip_prefix = "googleapis-143084a2624b6591ee1f9d23e7f5241856642f4d",
+        urls = ["https://github.com/googleapis/googleapis/archive/143084a2624b6591ee1f9d23e7f5241856642f4d.zip"],
+    )
+
+    maybe(
+        http_archive,
+        name = "com_github_grpc_grpc",
+        sha256 = "b391a327429279f6f29b9ae7e5317cd80d5e9d49cc100e6d682221af73d984a6",
+        strip_prefix = "grpc-93e8830070e9afcbaa992c75817009ee3f4b63a0",  # v1.24.3 with fixes
+        urls = ["https://github.com/grpc/grpc/archive/93e8830070e9afcbaa992c75817009ee3f4b63a0.zip"],
+    )

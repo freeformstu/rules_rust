@@ -30,6 +30,7 @@ fn find_generated_rust_files(out_dir: &Path) -> BTreeSet<PathBuf> {
                 all_rs_files.insert(path);
             }
         } else if let Some(name) = path.file_name() {
+            // The filename is set to `_` when the package name is empty.
             if name == "_" {
                 let rs_name = path.parent().expect("Failed to get parent").join("_.rs");
                 fs::rename(&path, &rs_name).unwrap_or_else(|err| {
