@@ -427,6 +427,7 @@ rust_prost_toolchain = rule(
         "prost_plugin_flag": attr.string(
             doc = "Prost plugin flag format. (e.g. `--plugin=protoc-gen-prost=%s`)",
             mandatory = True,
+            default = "--plugin=protoc-gen-prost=%s",
         ),
         "prost_runtime": attr.label(
             doc = "The Prost runtime crates to use.",
@@ -454,6 +455,7 @@ rust_prost_toolchain = rule(
         ),
         "tonic_plugin_flag": attr.string(
             doc = "Tonic plugin flag format. (e.g. `--plugin=protoc-gen-tonic=%s`))",
+            default = "--plugin=protoc-gen-tonic=%s",
         ),
         "tonic_runtime": attr.label(
             doc = "The Tonic runtime crates to use.",
