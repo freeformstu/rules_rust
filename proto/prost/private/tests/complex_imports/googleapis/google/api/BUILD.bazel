@@ -1,0 +1,16 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+proto_library(
+    name = "annotations_proto",
+    srcs = [
+        "annotations.proto",
+        "client.proto",
+        "field_behavior.proto",
+        "http.proto",
+    ],
+    strip_import_prefix = "/proto/prost/private/tests/complex_imports/googleapis",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_protobuf//:descriptor_proto",
+    ],
+)

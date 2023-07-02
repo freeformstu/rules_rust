@@ -1,0 +1,15 @@
+load("@rules_rust//proto/prost:defs.bzl", "rust_prost_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+proto_library(
+    name = "semver_proto",
+    srcs = ["semver.proto"],
+    strip_import_prefix = "/proto/prost/private/tests/complex_imports/remote-apis",
+    visibility = ["//visibility:public"],
+)
+
+rust_prost_library(
+    name = "semver_prost_proto",
+    proto = ":semver_proto",
+    visibility = ["//visibility:public"],
+)

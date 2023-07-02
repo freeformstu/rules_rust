@@ -1,0 +1,16 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+proto_library(
+    name = "longrunning_proto",
+    srcs = ["operations.proto"],
+    strip_import_prefix = "/proto/prost/private/tests/complex_imports/googleapis",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto/prost/private/tests/complex_imports/googleapis/google/api:annotations_proto",
+        "//proto/prost/private/tests/complex_imports/googleapis/google/rpc:status_proto",
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:descriptor_proto",
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:empty_proto",
+    ],
+)
