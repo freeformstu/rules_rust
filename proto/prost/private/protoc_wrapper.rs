@@ -501,11 +501,6 @@ impl Args {
                             .expect("Failed to read file")
                             .lines()
                         {
-                            if crate_name.as_ref().unwrap() == "annotations_proto"
-                                && flag.contains("MethodOptions")
-                            {
-                                continue;
-                            }
                             tonic_or_prost_opts.push(format!("extern_path={}", flag.trim()));
                         }
                     }
