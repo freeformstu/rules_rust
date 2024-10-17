@@ -2,16 +2,16 @@
 
 load("//rust:defs.bzl", "rust_common")
 
-def _extra_toolchain_transition_impl(_settings, attr):
+def _extra_toolchain_transition_impl(settings, attr):
     return {
         "//command_line_option:extra_toolchains": [
             attr.toolchain,
-        ],
+        ] + settings["//command_line_option:extra_toolchains"],
     }
 
 _extra_toolchain_transition = transition(
     implementation = _extra_toolchain_transition_impl,
-    inputs = [],
+    inputs = ["//command_line_option:extra_toolchains"],
     outputs = ["//command_line_option:extra_toolchains"],
 )
 
@@ -23,6 +23,7 @@ def _extra_toolchain_wrapper_impl(ctx):
 
 extra_toolchain_wrapper = rule(
     implementation = _extra_toolchain_wrapper_impl,
+    doc = "Transition rule used for unit testing the prost toolchains.",
     attrs = {
         "dep": attr.label(),
         "toolchain": attr.label(),
