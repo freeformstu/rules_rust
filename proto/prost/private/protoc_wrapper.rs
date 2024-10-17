@@ -68,7 +68,48 @@ struct Module {
     contents: String,
 
     /// The names of any other modules which are submodules of this module.
-    submodules: BTreeSet<String>,
+    submodules: BTreeMap<String, Module>,
+}
+
+impl Module {
+    fn insert(
+        &mut self,
+        module_name: String,
+        contents: String,
+    ) {
+        let module_parts = module_name.split('.').collect::<Vec<_>>();
+
+        let mut parent_module = self.insert_module(
+            module_parts.as_slice(),
+            contents,
+        );
+    }
+
+    fn insert_module(&mut self, module_parts: &[&str], contents: String) -> &mut Module {
+        let current_name = &module_parts[0];
+
+        // Insert empty module if it doesn't exist.
+        if !self.submodules.contains_key(&current_name.to_string()) {
+            self.submodules.insert(
+                current_name.to_string(),
+                Module {
+                    name: current_name.to_string(),
+                    contents: "".to_string(),
+                    submodules: BTreeMap::new(),
+                }
+            );
+        }
+
+        let current_module = self.submodules.get_mut(&current_name.to_string()).unwrap();
+
+        // If this is the last part (current module) then add the contents.
+        if module_parts.len() == 1 {
+            current_module.contents = contents;
+            return current_module;
+        }
+
+        return current_module.insert_module(&module_parts[1..], contents)
+    }
 }
 
 /// Generate a lib.rs file with all prost/tonic outputs embeeded in modules which
@@ -118,7 +159,13 @@ struct Module {
 /// }
 /// ```
 fn generate_lib_rs(prost_outputs: &BTreeSet<PathBuf>, is_tonic: bool) -> String {
-    let mut module_info = BTreeMap::new();
+    // let mut module_info = BTreeMap::new();
+
+    let mut module_info = Module {
+        name: "".to_string(),
+        contents: "".to_string(),
+        submodules: BTreeMap::new(),
+    };
 
     for path in prost_outputs.iter() {
         let mut package = path
@@ -155,59 +202,36 @@ fn generate_lib_rs(prost_outputs: &BTreeSet<PathBuf>, is_tonic: bool) -> String 
         // Avoid a stack overflow by skipping a known bad package name
         let module_name = snake_cased_package_name(&package);
 
+        println!("Module: {module_name}");
+
+        let contents = fs::read_to_string(path).expect("Failed to read file");
         module_info.insert(
-            module_name.clone(),
-            Module {
-                name,
-                contents: fs::read_to_string(path).expect("Failed to read file"),
-                submodules: BTreeSet::new(),
-            },
+            module_name,
+            contents,
         );
+    }
 
-        let module_parts = module_name.split('.').collect::<Vec<_>>();
-        for parent_module_index in 0..module_parts.len() {
-            let child_module_index = parent_module_index + 1;
-            if child_module_index >= module_parts.len() {
-                break;
-            }
-            let full_parent_module_name = module_parts[0..parent_module_index + 1].join(".");
-            let parent_module_name = module_parts[parent_module_index];
-            let child_module_name = module_parts[child_module_index];
-
-            module_info
-                .entry(full_parent_module_name.clone())
-                .and_modify(|parent_module| {
-                    parent_module
-                        .submodules
-                        .insert(child_module_name.to_string());
-                })
-                .or_insert(Module {
-                    name: parent_module_name.to_string(),
-                    contents: "".to_string(),
-                    submodules: [child_module_name.to_string()].iter().cloned().collect(),
-                });
-        }
+    for key in module_info.submodules.keys() {
+        println!("key: {}", key);
     }
 
     let mut content = "// @generated\n\n".to_string();
-    write_module(&mut content, &module_info, "", 0);
+    write_module(&mut content, &module_info, 0);
     content
 }
 
 /// Write out a rust module and all of its submodules.
 fn write_module(
     content: &mut String,
-    module_info: &BTreeMap<String, Module>,
-    module_name: &str,
+    module: &Module,
     depth: usize,
 ) {
-    if module_name.is_empty() {
-        for submodule_name in module_info.keys() {
-            write_module(content, module_info, submodule_name, depth + 1);
+    if module.name.is_empty() {
+        for submodule in module.submodules.values() {
+            write_module(content, submodule, depth);
         }
         return;
     }
-    let module = module_info.get(module_name).expect("Failed to get module");
     let indent = "  ".repeat(depth);
     let is_rust_module = module.name != "_";
 
@@ -222,11 +246,10 @@ fn write_module(
         .write_str(&module.contents)
         .expect("Failed to write string");
 
-    for submodule_name in module.submodules.iter() {
+    for submodule in module.submodules.values() {
         write_module(
             content,
-            module_info,
-            [module_name, submodule_name].join(".").as_str(),
+            submodule,
             depth + 1,
         );
     }
