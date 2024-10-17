@@ -82,11 +82,13 @@ impl Module {
         let current_name = module_parts[0].to_string();
 
         // Insert empty module if it doesn't exist.
-        self.submodules.entry(current_name.clone()).or_insert_with(|| Module {
-            name: current_name.clone(),
-            contents: "".to_string(),
-            submodules: BTreeMap::new(),
-        });
+        self.submodules
+            .entry(current_name.clone())
+            .or_insert_with(|| Module {
+                name: current_name.clone(),
+                contents: "".to_string(),
+                submodules: BTreeMap::new(),
+            });
 
         let current_module = self.submodules.get_mut(&current_name).unwrap();
 
