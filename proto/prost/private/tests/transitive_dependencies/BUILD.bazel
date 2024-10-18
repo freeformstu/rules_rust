@@ -30,6 +30,8 @@ rust_test(
     edition = "2021",
     deps = [
         ":a_rs_proto",
+        # Add b_proto as a dependency directly to ensure compatibility with `a.proto`'s imports.
+        "//proto/prost/private/tests/transitive_dependencies/b:b_rs_proto",
     ],
 )
 
