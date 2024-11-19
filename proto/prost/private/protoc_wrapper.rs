@@ -710,9 +710,6 @@ fn has_services(descriptor_set: &FileDescriptorSet) -> bool {
 }
 
 fn main() {
-    // Always enable backtraces for the protoc wrapper.
-    env::set_var("RUST_BACKTRACE", "1");
-
     let Args {
         protoc,
         out_dir,
@@ -741,21 +738,58 @@ fn main() {
         eprintln!("Warning: Service definitions will not be generated because the prost toolchain did not define a tonic plugin.");
     }
 
-    let mut cmd = process::Command::new(protoc);
-    cmd.arg(format!("--prost_out={}", out_dir.display()));
-    if is_tonic {
-        cmd.arg(format!("--tonic_out={}", out_dir.display()));
+    let tmp_dir = out_dir.parent().unwrap().join(format!(
+        "{}.tmp",
+        out_dir.file_name().unwrap().to_string_lossy()
+    ));
+    if tmp_dir.exists() {
+        fs::remove_dir_all(&tmp_dir).unwrap_or_else(|e| {
+            panic!("Failed to delete directory: {}\n{:?}", tmp_dir.display(), e)
+        });
     }
-    cmd.args(extra_args);
-    cmd.args(
+    fs::create_dir_all(&tmp_dir)
+        .unwrap_or_else(|e| panic!("Failed to create directory: {}\n{:?}", tmp_dir.display(), e));
+
+    let args_file = out_dir.join("args.txt");
+    let mut args = Vec::new();
+
+    args.push(format!("--prost_out={}", out_dir.display()));
+    if is_tonic {
+        args.push(format!("--tonic_out={}", out_dir.display()));
+    }
+    args.extend(extra_args);
+    args.extend(
         proto_paths
             .iter()
             .map(|proto_path| format!("--proto_path={}", proto_path)),
     );
-    cmd.args(includes.iter().map(|include| format!("-I{}", include)));
-    cmd.args(&proto_files);
+    args.extend(includes.iter().map(|include| format!("-I{}", include)));
+    args.extend(proto_files.iter().map(|f| f.to_string_lossy().to_string()));
 
-    let status = cmd.status().expect("Failed to spawn protoc process");
+    fs::write(&args_file, args.join("\n")).unwrap_or_else(|e| {
+        panic!(
+            "Failed to write args file: {}\n{:?}",
+            args_file.display(),
+            e
+        )
+    });
+    let mut cmd = process::Command::new(protoc);
+    cmd.arg(format!("@{}", args_file.display()));
+
+    let status_result = cmd.status();
+
+    fs::remove_dir_all(&tmp_dir)
+        .unwrap_or_else(|e| panic!("Failed to delete directory: {}\n{:?}", tmp_dir.display(), e));
+
+    let status = status_result.unwrap_or_else(|e| {
+        panic!(
+            "Failed to spawn protoc process\n{:#?}\n{} -- {:#?}\n{:?}",
+            cmd,
+            args_file.display(),
+            args,
+            e
+        )
+    });
     if !status.success() {
         panic!(
             "protoc failed with status: {}",
