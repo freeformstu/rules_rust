@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="en" class="light" dir="ltr">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 
 
         <!-- Custom HTML head -->
-        
+
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
@@ -30,15 +30,17 @@
 
         <!-- Custom theme stylesheets -->
 
-    </head>
-    <body class="sidebar-visible no-js">
-    <div id="body-container">
+
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
-
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -60,19 +62,16 @@
             var theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            var body = document.querySelector('body');
-            body.classList.remove('no-js')
-            body.classList.add('js');
+            html.classList.add("js");
         </script>
 
         <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var body = document.querySelector('body');
             var sidebar = null;
             var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
@@ -82,45 +81,25 @@
                 sidebar = 'hidden';
             }
             sidebar_toggle.checked = sidebar === 'visible';
-            body.classList.remove('sidebar-visible');
-            body.classList.add("sidebar-" + sidebar);
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="spacer"></li><li class="chapter-item expanded "><a href="rules.html"><strong aria-hidden="true">1.</strong> Rules</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="rust.html" class="active"><strong aria-hidden="true">1.1.</strong> rust</a></li><li class="chapter-item expanded "><a href="rust_doc.html"><strong aria-hidden="true">1.2.</strong> rustdoc</a></li><li class="chapter-item expanded "><a href="rust_clippy.html"><strong aria-hidden="true">1.3.</strong> clippy</a></li><li class="chapter-item expanded "><a href="rust_fmt.html"><strong aria-hidden="true">1.4.</strong> rustfmt</a></li><li class="chapter-item expanded "><a href="rust_proto.html"><strong aria-hidden="true">1.5.</strong> proto</a></li><li class="chapter-item expanded "><a href="rust_bindgen.html"><strong aria-hidden="true">1.6.</strong> bindgen</a></li><li class="chapter-item expanded "><a href="rust_wasm_bindgen.html"><strong aria-hidden="true">1.7.</strong> wasm_bindgen</a></li><li class="chapter-item expanded "><a href="cargo.html"><strong aria-hidden="true">1.8.</strong> cargo</a></li><li class="chapter-item expanded "><a href="rust_analyzer.html"><strong aria-hidden="true">1.9.</strong> rust_analyzer</a></li><li class="chapter-item expanded "><a href="flatten.html"><strong aria-hidden="true">1.10.</strong> all symbols</a></li></ol></li><li class="chapter-item expanded "><a href="external_crates.html"><strong aria-hidden="true">2.</strong> External Crates</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="crate_universe_bzlmod.html"><strong aria-hidden="true">2.1.</strong> crate_universe (bzlmod)</a></li><li class="chapter-item expanded "><a href="crate_universe.html"><strong aria-hidden="true">2.2.</strong> crate_universe (WORKSPACE)</a></li></ol></li></ol>
-            </div>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <!-- Track and set sidebar scroll position -->
-        <script>
-            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
-            sidebarScrollbox.addEventListener('click', function(e) {
-                if (e.target.tagName === 'A') {
-                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
-                }
-            }, { passive: true });
-            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
-            sessionStorage.removeItem('sidebar-scroll');
-            if (sidebarScrollTop) {
-                // preserve sidebar scroll position when navigating via links within sidebar
-                sidebarScrollbox.scrollTop = sidebarScrollTop;
-            } else {
-                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
-                var activeSection = document.querySelector('#sidebar .active');
-                if (activeSection) {
-                    activeSection.scrollIntoView({ block: 'center' });
-                }
-            }
-        </script>
-
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
-                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
                         <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
@@ -177,72 +156,30 @@
                 <div id="content" class="content">
                     <main>
                         <!-- Generated with Stardoc: http://skydoc.bazel.build -->
-<h1 id="rust"><a class="header" href="#rust">Rust</a></h1>
+<p>Public entry point to all Rust rules and supported APIs.</p>
+<h2 id="rules"><a class="header" href="#rules">Rules</a></h2>
 <ul>
 <li><a href="#rust_binary">rust_binary</a></li>
 <li><a href="#rust_library">rust_library</a></li>
 <li><a href="#rust_library_group">rust_library_group</a></li>
-<li><a href="#rust_static_library">rust_static_library</a></li>
-<li><a href="#rust_shared_library">rust_shared_library</a></li>
 <li><a href="#rust_proc_macro">rust_proc_macro</a></li>
+<li><a href="#rust_shared_library">rust_shared_library</a></li>
+<li><a href="#rust_static_library">rust_static_library</a></li>
 <li><a href="#rust_test">rust_test</a></li>
-<li><a href="#rust_test_suite">rust_test_suite</a></li>
-<li><a href="#error_format">error_format</a></li>
-<li><a href="#extra_rustc_flag">extra_rustc_flag</a></li>
-<li><a href="#extra_rustc_flags">extra_rustc_flags</a></li>
-<li><a href="#capture_clippy_output">capture_clippy_output</a></li>
 </ul>
-<p><a id="capture_clippy_output"></a></p>
-<h2 id="capture_clippy_output"><a class="header" href="#capture_clippy_output">capture_clippy_output</a></h2>
-<pre>
-capture_clippy_output(<a href="#capture_clippy_output-name">name</a>)
-</pre>
-<p>Control whether to print clippy output or store it to a file, using the configured error_format.</p>
-<p><strong>ATTRIBUTES</strong></p>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="capture_clippy_output-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-</tbody></table>
-</div>
-<p><a id="error_format"></a></p>
-<h2 id="error_format"><a class="header" href="#error_format">error_format</a></h2>
-<pre>
-error_format(<a href="#error_format-name">name</a>)
-</pre>
-<p>Change the <a href="https://doc.rust-lang.org/rustc/command-line-arguments.html#option-error-format">--error-format</a> flag from the command line with <code>--@rules_rust//:error_format</code>. See rustc documentation for valid values.</p>
-<p><strong>ATTRIBUTES</strong></p>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="error_format-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-</tbody></table>
-</div>
-<p><a id="extra_rustc_flag"></a></p>
-<h2 id="extra_rustc_flag"><a class="header" href="#extra_rustc_flag">extra_rustc_flag</a></h2>
-<pre>
-extra_rustc_flag(<a href="#extra_rustc_flag-name">name</a>)
-</pre>
-<p>Add additional rustc_flag from the command line with <code>--@rules_rust//:extra_rustc_flag</code>. Multiple uses are accumulated and appended after the extra_rustc_flags.</p>
-<p><strong>ATTRIBUTES</strong></p>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="extra_rustc_flag-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-</tbody></table>
-</div>
-<p><a id="extra_rustc_flags"></a></p>
-<h2 id="extra_rustc_flags"><a class="header" href="#extra_rustc_flags">extra_rustc_flags</a></h2>
-<pre>
-extra_rustc_flags(<a href="#extra_rustc_flags-name">name</a>)
-</pre>
-<p>Add additional rustc_flags from the command line with <code>--@rules_rust//:extra_rustc_flags</code>. This flag should only be used for flags that need to be applied across the entire build. For options that apply to individual crates, use the rustc_flags attribute on the individual crate's rule instead. NOTE: These flags not applied to the exec configuration (proc-macros, cargo_build_script, etc); use <code>--@rules_rust//:extra_exec_rustc_flags</code> to apply flags to the exec configuration.</p>
-<p><strong>ATTRIBUTES</strong></p>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Name</th><th style="text-align: left">Description</th><th style="text-align: left">Type</th><th style="text-align: left">Mandatory</th><th style="text-align: left">Default</th></tr></thead><tbody>
-<tr><td style="text-align: left"><a id="extra_rustc_flags-name"></a>name</td><td style="text-align: left">A unique name for this target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels#target-names">Name</a></td><td style="text-align: left">required</td><td style="text-align: left"></td></tr>
-</tbody></table>
-</div>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<ul>
+<li><a href="#rust_test_suite">rust_test_suite</a></li>
+</ul>
 <p><a id="rust_binary"></a></p>
 <h2 id="rust_binary"><a class="header" href="#rust_binary">rust_binary</a></h2>
 <pre>
-rust_binary(<a href="#rust_binary-name">name</a>, <a href="#rust_binary-deps">deps</a>, <a href="#rust_binary-srcs">srcs</a>, <a href="#rust_binary-data">data</a>, <a href="#rust_binary-aliases">aliases</a>, <a href="#rust_binary-alwayslink">alwayslink</a>, <a href="#rust_binary-compile_data">compile_data</a>, <a href="#rust_binary-crate_features">crate_features</a>, <a href="#rust_binary-crate_name">crate_name</a>,
-            <a href="#rust_binary-crate_root">crate_root</a>, <a href="#rust_binary-crate_type">crate_type</a>, <a href="#rust_binary-edition">edition</a>, <a href="#rust_binary-env">env</a>, <a href="#rust_binary-experimental_use_cc_common_link">experimental_use_cc_common_link</a>, <a href="#rust_binary-linker_script">linker_script</a>,
-            <a href="#rust_binary-malloc">malloc</a>, <a href="#rust_binary-out_binary">out_binary</a>, <a href="#rust_binary-platform">platform</a>, <a href="#rust_binary-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_binary-rustc_env">rustc_env</a>, <a href="#rust_binary-rustc_env_files">rustc_env_files</a>, <a href="#rust_binary-rustc_flags">rustc_flags</a>,
-            <a href="#rust_binary-stamp">stamp</a>, <a href="#rust_binary-version">version</a>)
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(<a href="#rust_binary-name">name</a>, <a href="#rust_binary-deps">deps</a>, <a href="#rust_binary-srcs">srcs</a>, <a href="#rust_binary-data">data</a>, <a href="#rust_binary-aliases">aliases</a>, <a href="#rust_binary-alwayslink">alwayslink</a>, <a href="#rust_binary-binary_name">binary_name</a>, <a href="#rust_binary-compile_data">compile_data</a>, <a href="#rust_binary-crate_features">crate_features</a>,
+            <a href="#rust_binary-crate_name">crate_name</a>, <a href="#rust_binary-crate_root">crate_root</a>, <a href="#rust_binary-crate_type">crate_type</a>, <a href="#rust_binary-edition">edition</a>, <a href="#rust_binary-env">env</a>, <a href="#rust_binary-experimental_use_cc_common_link">experimental_use_cc_common_link</a>,
+            <a href="#rust_binary-linker_script">linker_script</a>, <a href="#rust_binary-lint_config">lint_config</a>, <a href="#rust_binary-malloc">malloc</a>, <a href="#rust_binary-out_binary">out_binary</a>, <a href="#rust_binary-platform">platform</a>, <a href="#rust_binary-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_binary-rustc_env">rustc_env</a>,
+            <a href="#rust_binary-rustc_env_files">rustc_env_files</a>, <a href="#rust_binary-rustc_flags">rustc_flags</a>, <a href="#rust_binary-stamp">stamp</a>, <a href="#rust_binary-version">version</a>)
 </pre>
 <p>Builds a Rust binary crate.</p>
 <p>Example:</p>
@@ -324,6 +261,7 @@ is available under the key <code>dsym_folder</code> in <code>OutputGroupInfo</co
 <tr><td style="text-align: left"><a id="rust_binary-data"></a>data</td><td style="text-align: left">List of files used by this rule at compile time and runtime.<br><br>If including data at compile time with include_str!() and similar, prefer <code>compile_data</code> over <code>data</code>, to prevent the data also being included in the runfiles.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-aliases"></a>aliases</td><td style="text-align: left">Remap crates to a new name or moniker for linkage to this target<br><br>These are other <code>rust_library</code> targets and will be presented as the new name given.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: Label -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-alwayslink"></a>alwayslink</td><td style="text-align: left">If 1, any binary that depends (directly or indirectly) on this library will link in all the object files even if some contain no symbols referenced by the binary.<br><br>This attribute is used by the C++ Starlark API when passing CcInfo providers.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>False</code></td></tr>
+<tr><td style="text-align: left"><a id="rust_binary-binary_name"></a>binary_name</td><td style="text-align: left">Override the resulting binary file name. By default, the binary file will be named using the <code>name</code> attribute on this rule, however sometimes that is not deseriable.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-compile_data"></a>compile_data</td><td style="text-align: left">List of files used by this rule at compile time.<br><br>This attribute can be used to specify any data files that are embedded into the library, such as via the <a href="https://doc.rust-lang.org/std/macro.include_str!.html"><code>include_str!</code></a> macro.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-crate_features"></a>crate_features</td><td style="text-align: left">List of features to enable for this crate.<br><br>Features are defined in the code using the <code>#[cfg(feature = "foo")]</code> configuration option. The features listed here will be passed to <code>rustc</code> with <code>--cfg feature="${feature_name}"</code> flags.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-crate_name"></a>crate_name</td><td style="text-align: left">Crate name to use for this target.<br><br>This must be a valid Rust identifier, i.e. it may contain only alphanumeric characters and underscores. Defaults to the target name, with any hyphens replaced by underscores.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
@@ -333,6 +271,7 @@ is available under the key <code>dsym_folder</code> in <code>OutputGroupInfo</co
 <tr><td style="text-align: left"><a id="rust_binary-env"></a>env</td><td style="text-align: left">Specifies additional environment variables to set when the target is executed by bazel run. Values are subject to <code>$(rootpath)</code>, <code>$(execpath)</code>, location, and <a href="https://docs.bazel.build/versions/master/be/make-variables.html">"Make variable"</a> substitution.<br><br>Execpath returns absolute path, and in order to be able to construct the absolute path we need to wrap the test binary in a launcher. Using a launcher comes with complications, such as more complicated debugger attachment.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-experimental_use_cc_common_link"></a>experimental_use_cc_common_link</td><td style="text-align: left">Whether to use cc_common.link to link rust binaries. Possible values: [-1, 0, 1]. -1 means use the value of the toolchain.experimental_use_cc_common_link boolean build setting to determine. 0 means do not use cc_common.link (use rustc instead). 1 means use cc_common.link.</td><td style="text-align: left">Integer</td><td style="text-align: left">optional</td><td style="text-align: left"><code>-1</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-linker_script"></a>linker_script</td><td style="text-align: left">Link script to forward into linker via rustc options.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
+<tr><td style="text-align: left"><a id="rust_binary-lint_config"></a>lint_config</td><td style="text-align: left">Set of lints to apply when building this crate.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-malloc"></a>malloc</td><td style="text-align: left">Override the default dependency on <code>malloc</code>.<br><br>By default, Rust binaries linked with cc_common.link are linked against <code>@bazel_tools//tools/cpp:malloc"</code>, which is an empty library and the resulting binary will use libc's <code>malloc</code>. This label must refer to a <code>cc_library</code> rule.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@bazel_tools//tools/cpp:malloc"</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-out_binary"></a>out_binary</td><td style="text-align: left">Force a target, regardless of it's <code>crate_type</code>, to always mark the file as executable. This attribute is only used to support wasm targets but is expected to be removed following a resolution to https://github.com/bazelbuild/rules_rust/issues/771.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>False</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_binary-platform"></a>platform</td><td style="text-align: left">Optional platform to transition the binary to.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
@@ -347,9 +286,11 @@ is available under the key <code>dsym_folder</code> in <code>OutputGroupInfo</co
 <p><a id="rust_library"></a></p>
 <h2 id="rust_library"><a class="header" href="#rust_library">rust_library</a></h2>
 <pre>
+load("@rules_rust//rust:defs.bzl", "rust_library")
+
 rust_library(<a href="#rust_library-name">name</a>, <a href="#rust_library-deps">deps</a>, <a href="#rust_library-srcs">srcs</a>, <a href="#rust_library-data">data</a>, <a href="#rust_library-aliases">aliases</a>, <a href="#rust_library-alwayslink">alwayslink</a>, <a href="#rust_library-compile_data">compile_data</a>, <a href="#rust_library-crate_features">crate_features</a>, <a href="#rust_library-crate_name">crate_name</a>,
-             <a href="#rust_library-crate_root">crate_root</a>, <a href="#rust_library-disable_pipelining">disable_pipelining</a>, <a href="#rust_library-edition">edition</a>, <a href="#rust_library-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_library-rustc_env">rustc_env</a>, <a href="#rust_library-rustc_env_files">rustc_env_files</a>,
-             <a href="#rust_library-rustc_flags">rustc_flags</a>, <a href="#rust_library-stamp">stamp</a>, <a href="#rust_library-version">version</a>)
+             <a href="#rust_library-crate_root">crate_root</a>, <a href="#rust_library-disable_pipelining">disable_pipelining</a>, <a href="#rust_library-edition">edition</a>, <a href="#rust_library-lint_config">lint_config</a>, <a href="#rust_library-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_library-rustc_env">rustc_env</a>,
+             <a href="#rust_library-rustc_env_files">rustc_env_files</a>, <a href="#rust_library-rustc_flags">rustc_flags</a>, <a href="#rust_library-stamp">stamp</a>, <a href="#rust_library-version">version</a>)
 </pre>
 <p>Builds a Rust library crate.</p>
 <p>Example:</p>
@@ -418,6 +359,7 @@ INFO: Elapsed time: 1.245s, Critical Path: 1.01s
 <tr><td style="text-align: left"><a id="rust_library-crate_root"></a>crate_root</td><td style="text-align: left">The file that will be passed to <code>rustc</code> to be used for building this crate.<br><br>If <code>crate_root</code> is not set, then this rule will look for a <code>lib.rs</code> file (or <code>main.rs</code> for rust_binary) or the single file in <code>srcs</code> if <code>srcs</code> contains only one file.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_library-disable_pipelining"></a>disable_pipelining</td><td style="text-align: left">Disables pipelining for this rule if it is globally enabled. This will cause this rule to not produce a <code>.rmeta</code> file and all the dependent crates will instead use the <code>.rlib</code> file.</td><td style="text-align: left">Boolean</td><td style="text-align: left">optional</td><td style="text-align: left"><code>False</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_library-edition"></a>edition</td><td style="text-align: left">The rust edition to use for this crate. Defaults to the edition specified in the rust_toolchain.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+<tr><td style="text-align: left"><a id="rust_library-lint_config"></a>lint_config</td><td style="text-align: left">Set of lints to apply when building this crate.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_library-proc_macro_deps"></a>proc_macro_deps</td><td style="text-align: left">List of <code>rust_proc_macro</code> targets used to help build this library target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_library-rustc_env"></a>rustc_env</td><td style="text-align: left">Dictionary of additional <code>"key": "value"</code> environment variables to set for rustc.<br><br>rust_test()/rust_binary() rules can use $(rootpath //package:target) to pass in the location of a generated file or external tool. Cargo build scripts that wish to expand locations should use cargo_build_script()'s build_script_env argument instead, as build scripts are run in a different environment - see cargo_build_script()'s documentation for more.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_library-rustc_env_files"></a>rustc_env_files</td><td style="text-align: left">Files containing additional environment variables to set for rustc.<br><br>These files should  contain a single variable per line, of format <code>NAME=value</code>, and newlines may be included in a value by ending a line with a trailing back-slash (<code>\\</code>).<br><br>The order that these files will be processed is unspecified, so multiple definitions of a particular variable are discouraged.<br><br>Note that the variables here are subject to <a href="https://docs.bazel.build/versions/main/user-manual.html#workspace_status">workspace status</a> stamping should the <code>stamp</code> attribute be enabled. Stamp variables should be wrapped in brackets in order to be resolved. E.g. <code>NAME={WORKSPACE_STATUS_VARIABLE}</code>.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
@@ -429,6 +371,8 @@ INFO: Elapsed time: 1.245s, Critical Path: 1.01s
 <p><a id="rust_library_group"></a></p>
 <h2 id="rust_library_group"><a class="header" href="#rust_library_group">rust_library_group</a></h2>
 <pre>
+load("@rules_rust//rust:defs.bzl", "rust_library_group")
+
 rust_library_group(<a href="#rust_library_group-name">name</a>, <a href="#rust_library_group-deps">deps</a>)
 </pre>
 <p>Functions as an alias for a set of dependencies.</p>
@@ -466,9 +410,11 @@ rust_library(
 <p><a id="rust_proc_macro"></a></p>
 <h2 id="rust_proc_macro"><a class="header" href="#rust_proc_macro">rust_proc_macro</a></h2>
 <pre>
+load("@rules_rust//rust:defs.bzl", "rust_proc_macro")
+
 rust_proc_macro(<a href="#rust_proc_macro-name">name</a>, <a href="#rust_proc_macro-deps">deps</a>, <a href="#rust_proc_macro-srcs">srcs</a>, <a href="#rust_proc_macro-data">data</a>, <a href="#rust_proc_macro-aliases">aliases</a>, <a href="#rust_proc_macro-alwayslink">alwayslink</a>, <a href="#rust_proc_macro-compile_data">compile_data</a>, <a href="#rust_proc_macro-crate_features">crate_features</a>,
-                <a href="#rust_proc_macro-crate_name">crate_name</a>, <a href="#rust_proc_macro-crate_root">crate_root</a>, <a href="#rust_proc_macro-edition">edition</a>, <a href="#rust_proc_macro-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_proc_macro-rustc_env">rustc_env</a>, <a href="#rust_proc_macro-rustc_env_files">rustc_env_files</a>,
-                <a href="#rust_proc_macro-rustc_flags">rustc_flags</a>, <a href="#rust_proc_macro-stamp">stamp</a>, <a href="#rust_proc_macro-version">version</a>)
+                <a href="#rust_proc_macro-crate_name">crate_name</a>, <a href="#rust_proc_macro-crate_root">crate_root</a>, <a href="#rust_proc_macro-edition">edition</a>, <a href="#rust_proc_macro-lint_config">lint_config</a>, <a href="#rust_proc_macro-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_proc_macro-rustc_env">rustc_env</a>,
+                <a href="#rust_proc_macro-rustc_env_files">rustc_env_files</a>, <a href="#rust_proc_macro-rustc_flags">rustc_flags</a>, <a href="#rust_proc_macro-stamp">stamp</a>, <a href="#rust_proc_macro-version">version</a>)
 </pre>
 <p>Builds a Rust proc-macro crate.</p>
 <p><strong>ATTRIBUTES</strong></p>
@@ -484,6 +430,7 @@ rust_proc_macro(<a href="#rust_proc_macro-name">name</a>, <a href="#rust_proc_ma
 <tr><td style="text-align: left"><a id="rust_proc_macro-crate_name"></a>crate_name</td><td style="text-align: left">Crate name to use for this target.<br><br>This must be a valid Rust identifier, i.e. it may contain only alphanumeric characters and underscores. Defaults to the target name, with any hyphens replaced by underscores.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_proc_macro-crate_root"></a>crate_root</td><td style="text-align: left">The file that will be passed to <code>rustc</code> to be used for building this crate.<br><br>If <code>crate_root</code> is not set, then this rule will look for a <code>lib.rs</code> file (or <code>main.rs</code> for rust_binary) or the single file in <code>srcs</code> if <code>srcs</code> contains only one file.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_proc_macro-edition"></a>edition</td><td style="text-align: left">The rust edition to use for this crate. Defaults to the edition specified in the rust_toolchain.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+<tr><td style="text-align: left"><a id="rust_proc_macro-lint_config"></a>lint_config</td><td style="text-align: left">Set of lints to apply when building this crate.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_proc_macro-proc_macro_deps"></a>proc_macro_deps</td><td style="text-align: left">List of <code>rust_proc_macro</code> targets used to help build this library target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_proc_macro-rustc_env"></a>rustc_env</td><td style="text-align: left">Dictionary of additional <code>"key": "value"</code> environment variables to set for rustc.<br><br>rust_test()/rust_binary() rules can use $(rootpath //package:target) to pass in the location of a generated file or external tool. Cargo build scripts that wish to expand locations should use cargo_build_script()'s build_script_env argument instead, as build scripts are run in a different environment - see cargo_build_script()'s documentation for more.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_proc_macro-rustc_env_files"></a>rustc_env_files</td><td style="text-align: left">Files containing additional environment variables to set for rustc.<br><br>These files should  contain a single variable per line, of format <code>NAME=value</code>, and newlines may be included in a value by ending a line with a trailing back-slash (<code>\\</code>).<br><br>The order that these files will be processed is unspecified, so multiple definitions of a particular variable are discouraged.<br><br>Note that the variables here are subject to <a href="https://docs.bazel.build/versions/main/user-manual.html#workspace_status">workspace status</a> stamping should the <code>stamp</code> attribute be enabled. Stamp variables should be wrapped in brackets in order to be resolved. E.g. <code>NAME={WORKSPACE_STATUS_VARIABLE}</code>.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
@@ -495,9 +442,11 @@ rust_proc_macro(<a href="#rust_proc_macro-name">name</a>, <a href="#rust_proc_ma
 <p><a id="rust_shared_library"></a></p>
 <h2 id="rust_shared_library"><a class="header" href="#rust_shared_library">rust_shared_library</a></h2>
 <pre>
+load("@rules_rust//rust:defs.bzl", "rust_shared_library")
+
 rust_shared_library(<a href="#rust_shared_library-name">name</a>, <a href="#rust_shared_library-deps">deps</a>, <a href="#rust_shared_library-srcs">srcs</a>, <a href="#rust_shared_library-data">data</a>, <a href="#rust_shared_library-aliases">aliases</a>, <a href="#rust_shared_library-alwayslink">alwayslink</a>, <a href="#rust_shared_library-compile_data">compile_data</a>, <a href="#rust_shared_library-crate_features">crate_features</a>,
-                    <a href="#rust_shared_library-crate_name">crate_name</a>, <a href="#rust_shared_library-crate_root">crate_root</a>, <a href="#rust_shared_library-edition">edition</a>, <a href="#rust_shared_library-experimental_use_cc_common_link">experimental_use_cc_common_link</a>, <a href="#rust_shared_library-malloc">malloc</a>,
-                    <a href="#rust_shared_library-platform">platform</a>, <a href="#rust_shared_library-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_shared_library-rustc_env">rustc_env</a>, <a href="#rust_shared_library-rustc_env_files">rustc_env_files</a>, <a href="#rust_shared_library-rustc_flags">rustc_flags</a>, <a href="#rust_shared_library-stamp">stamp</a>,
+                    <a href="#rust_shared_library-crate_name">crate_name</a>, <a href="#rust_shared_library-crate_root">crate_root</a>, <a href="#rust_shared_library-edition">edition</a>, <a href="#rust_shared_library-experimental_use_cc_common_link">experimental_use_cc_common_link</a>, <a href="#rust_shared_library-lint_config">lint_config</a>,
+                    <a href="#rust_shared_library-malloc">malloc</a>, <a href="#rust_shared_library-platform">platform</a>, <a href="#rust_shared_library-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_shared_library-rustc_env">rustc_env</a>, <a href="#rust_shared_library-rustc_env_files">rustc_env_files</a>, <a href="#rust_shared_library-rustc_flags">rustc_flags</a>, <a href="#rust_shared_library-stamp">stamp</a>,
                     <a href="#rust_shared_library-version">version</a>)
 </pre>
 <p>Builds a Rust shared library.</p>
@@ -520,6 +469,7 @@ It is meant to be used when producing an artifact that is then consumed by some 
 <tr><td style="text-align: left"><a id="rust_shared_library-crate_root"></a>crate_root</td><td style="text-align: left">The file that will be passed to <code>rustc</code> to be used for building this crate.<br><br>If <code>crate_root</code> is not set, then this rule will look for a <code>lib.rs</code> file (or <code>main.rs</code> for rust_binary) or the single file in <code>srcs</code> if <code>srcs</code> contains only one file.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_shared_library-edition"></a>edition</td><td style="text-align: left">The rust edition to use for this crate. Defaults to the edition specified in the rust_toolchain.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_shared_library-experimental_use_cc_common_link"></a>experimental_use_cc_common_link</td><td style="text-align: left">Whether to use cc_common.link to link rust binaries. Possible values: [-1, 0, 1]. -1 means use the value of the toolchain.experimental_use_cc_common_link boolean build setting to determine. 0 means do not use cc_common.link (use rustc instead). 1 means use cc_common.link.</td><td style="text-align: left">Integer</td><td style="text-align: left">optional</td><td style="text-align: left"><code>-1</code></td></tr>
+<tr><td style="text-align: left"><a id="rust_shared_library-lint_config"></a>lint_config</td><td style="text-align: left">Set of lints to apply when building this crate.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_shared_library-malloc"></a>malloc</td><td style="text-align: left">Override the default dependency on <code>malloc</code>.<br><br>By default, Rust binaries linked with cc_common.link are linked against <code>@bazel_tools//tools/cpp:malloc"</code>, which is an empty library and the resulting binary will use libc's <code>malloc</code>. This label must refer to a <code>cc_library</code> rule.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@bazel_tools//tools/cpp:malloc"</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_shared_library-platform"></a>platform</td><td style="text-align: left">Optional platform to transition the shared library to.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_shared_library-proc_macro_deps"></a>proc_macro_deps</td><td style="text-align: left">List of <code>rust_proc_macro</code> targets used to help build this library target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
@@ -533,9 +483,11 @@ It is meant to be used when producing an artifact that is then consumed by some 
 <p><a id="rust_static_library"></a></p>
 <h2 id="rust_static_library"><a class="header" href="#rust_static_library">rust_static_library</a></h2>
 <pre>
+load("@rules_rust//rust:defs.bzl", "rust_static_library")
+
 rust_static_library(<a href="#rust_static_library-name">name</a>, <a href="#rust_static_library-deps">deps</a>, <a href="#rust_static_library-srcs">srcs</a>, <a href="#rust_static_library-data">data</a>, <a href="#rust_static_library-aliases">aliases</a>, <a href="#rust_static_library-alwayslink">alwayslink</a>, <a href="#rust_static_library-compile_data">compile_data</a>, <a href="#rust_static_library-crate_features">crate_features</a>,
-                    <a href="#rust_static_library-crate_name">crate_name</a>, <a href="#rust_static_library-crate_root">crate_root</a>, <a href="#rust_static_library-edition">edition</a>, <a href="#rust_static_library-platform">platform</a>, <a href="#rust_static_library-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_static_library-rustc_env">rustc_env</a>,
-                    <a href="#rust_static_library-rustc_env_files">rustc_env_files</a>, <a href="#rust_static_library-rustc_flags">rustc_flags</a>, <a href="#rust_static_library-stamp">stamp</a>, <a href="#rust_static_library-version">version</a>)
+                    <a href="#rust_static_library-crate_name">crate_name</a>, <a href="#rust_static_library-crate_root">crate_root</a>, <a href="#rust_static_library-edition">edition</a>, <a href="#rust_static_library-lint_config">lint_config</a>, <a href="#rust_static_library-platform">platform</a>, <a href="#rust_static_library-proc_macro_deps">proc_macro_deps</a>,
+                    <a href="#rust_static_library-rustc_env">rustc_env</a>, <a href="#rust_static_library-rustc_env_files">rustc_env_files</a>, <a href="#rust_static_library-rustc_flags">rustc_flags</a>, <a href="#rust_static_library-stamp">stamp</a>, <a href="#rust_static_library-version">version</a>)
 </pre>
 <p>Builds a Rust static library.</p>
 <p>This static library will contain all transitively reachable crates and native objects.
@@ -556,6 +508,7 @@ It is meant to be used when producing an artifact that is then consumed by some 
 <tr><td style="text-align: left"><a id="rust_static_library-crate_name"></a>crate_name</td><td style="text-align: left">Crate name to use for this target.<br><br>This must be a valid Rust identifier, i.e. it may contain only alphanumeric characters and underscores. Defaults to the target name, with any hyphens replaced by underscores.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_static_library-crate_root"></a>crate_root</td><td style="text-align: left">The file that will be passed to <code>rustc</code> to be used for building this crate.<br><br>If <code>crate_root</code> is not set, then this rule will look for a <code>lib.rs</code> file (or <code>main.rs</code> for rust_binary) or the single file in <code>srcs</code> if <code>srcs</code> contains only one file.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_static_library-edition"></a>edition</td><td style="text-align: left">The rust edition to use for this crate. Defaults to the edition specified in the rust_toolchain.</td><td style="text-align: left">String</td><td style="text-align: left">optional</td><td style="text-align: left"><code>""</code></td></tr>
+<tr><td style="text-align: left"><a id="rust_static_library-lint_config"></a>lint_config</td><td style="text-align: left">Set of lints to apply when building this crate.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_static_library-platform"></a>platform</td><td style="text-align: left">Optional platform to transition the static library to.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_static_library-proc_macro_deps"></a>proc_macro_deps</td><td style="text-align: left">List of <code>rust_proc_macro</code> targets used to help build this library target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_static_library-rustc_env"></a>rustc_env</td><td style="text-align: left">Dictionary of additional <code>"key": "value"</code> environment variables to set for rustc.<br><br>rust_test()/rust_binary() rules can use $(rootpath //package:target) to pass in the location of a generated file or external tool. Cargo build scripts that wish to expand locations should use cargo_build_script()'s build_script_env argument instead, as build scripts are run in a different environment - see cargo_build_script()'s documentation for more.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
@@ -568,10 +521,12 @@ It is meant to be used when producing an artifact that is then consumed by some 
 <p><a id="rust_test"></a></p>
 <h2 id="rust_test"><a class="header" href="#rust_test">rust_test</a></h2>
 <pre>
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
 rust_test(<a href="#rust_test-name">name</a>, <a href="#rust_test-deps">deps</a>, <a href="#rust_test-srcs">srcs</a>, <a href="#rust_test-data">data</a>, <a href="#rust_test-aliases">aliases</a>, <a href="#rust_test-alwayslink">alwayslink</a>, <a href="#rust_test-compile_data">compile_data</a>, <a href="#rust_test-crate">crate</a>, <a href="#rust_test-crate_features">crate_features</a>,
-          <a href="#rust_test-crate_name">crate_name</a>, <a href="#rust_test-crate_root">crate_root</a>, <a href="#rust_test-edition">edition</a>, <a href="#rust_test-env">env</a>, <a href="#rust_test-env_inherit">env_inherit</a>, <a href="#rust_test-experimental_use_cc_common_link">experimental_use_cc_common_link</a>, <a href="#rust_test-malloc">malloc</a>,
-          <a href="#rust_test-platform">platform</a>, <a href="#rust_test-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_test-rustc_env">rustc_env</a>, <a href="#rust_test-rustc_env_files">rustc_env_files</a>, <a href="#rust_test-rustc_flags">rustc_flags</a>, <a href="#rust_test-stamp">stamp</a>,
-          <a href="#rust_test-use_libtest_harness">use_libtest_harness</a>, <a href="#rust_test-version">version</a>)
+          <a href="#rust_test-crate_name">crate_name</a>, <a href="#rust_test-crate_root">crate_root</a>, <a href="#rust_test-edition">edition</a>, <a href="#rust_test-env">env</a>, <a href="#rust_test-env_inherit">env_inherit</a>, <a href="#rust_test-experimental_use_cc_common_link">experimental_use_cc_common_link</a>,
+          <a href="#rust_test-lint_config">lint_config</a>, <a href="#rust_test-malloc">malloc</a>, <a href="#rust_test-platform">platform</a>, <a href="#rust_test-proc_macro_deps">proc_macro_deps</a>, <a href="#rust_test-rustc_env">rustc_env</a>, <a href="#rust_test-rustc_env_files">rustc_env_files</a>, <a href="#rust_test-rustc_flags">rustc_flags</a>,
+          <a href="#rust_test-stamp">stamp</a>, <a href="#rust_test-use_libtest_harness">use_libtest_harness</a>, <a href="#rust_test-version">version</a>)
 </pre>
 <p>Builds a Rust test crate.</p>
 <p>Examples:</p>
@@ -688,6 +643,7 @@ rust_test(
 <tr><td style="text-align: left"><a id="rust_test-env"></a>env</td><td style="text-align: left">Specifies additional environment variables to set when the test is executed by bazel test. Values are subject to <code>$(rootpath)</code>, <code>$(execpath)</code>, location, and <a href="https://docs.bazel.build/versions/master/be/make-variables.html">"Make variable"</a> substitution.</td><td style="text-align: left"><a href="https://bazel.build/rules/lib/dict">Dictionary: String -&gt; String</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>{}</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_test-env_inherit"></a>env_inherit</td><td style="text-align: left">Specifies additional environment variables to inherit from the external environment when the test is executed by bazel test.</td><td style="text-align: left">List of strings</td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_test-experimental_use_cc_common_link"></a>experimental_use_cc_common_link</td><td style="text-align: left">Whether to use cc_common.link to link rust binaries. Possible values: [-1, 0, 1]. -1 means use the value of the toolchain.experimental_use_cc_common_link boolean build setting to determine. 0 means do not use cc_common.link (use rustc instead). 1 means use cc_common.link.</td><td style="text-align: left">Integer</td><td style="text-align: left">optional</td><td style="text-align: left"><code>-1</code></td></tr>
+<tr><td style="text-align: left"><a id="rust_test-lint_config"></a>lint_config</td><td style="text-align: left">Set of lints to apply when building this crate.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_test-malloc"></a>malloc</td><td style="text-align: left">Override the default dependency on <code>malloc</code>.<br><br>By default, Rust binaries linked with cc_common.link are linked against <code>@bazel_tools//tools/cpp:malloc"</code>, which is an empty library and the resulting binary will use libc's <code>malloc</code>. This label must refer to a <code>cc_library</code> rule.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>"@bazel_tools//tools/cpp:malloc"</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_test-platform"></a>platform</td><td style="text-align: left">Optional platform to transition the test to.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">Label</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>None</code></td></tr>
 <tr><td style="text-align: left"><a id="rust_test-proc_macro_deps"></a>proc_macro_deps</td><td style="text-align: left">List of <code>rust_proc_macro</code> targets used to help build this library target.</td><td style="text-align: left"><a href="https://bazel.build/concepts/labels">List of labels</a></td><td style="text-align: left">optional</td><td style="text-align: left"><code>[]</code></td></tr>
@@ -702,6 +658,8 @@ rust_test(
 <p><a id="rust_test_suite"></a></p>
 <h2 id="rust_test_suite"><a class="header" href="#rust_test_suite">rust_test_suite</a></h2>
 <pre>
+load("@rules_rust//rust:defs.bzl", "rust_test_suite")
+
 rust_test_suite(<a href="#rust_test_suite-name">name</a>, <a href="#rust_test_suite-srcs">srcs</a>, <a href="#rust_test_suite-shared_srcs">shared_srcs</a>, <a href="#rust_test_suite-kwargs">kwargs</a>)
 </pre>
 <p>A rule for creating a test suite for a set of <code>rust_test</code> targets.</p>
@@ -758,7 +716,7 @@ rust_test_suite(
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="rust_doc.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="rust_clippy.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -772,7 +730,7 @@ rust_test_suite(
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="rust_doc.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="rust_clippy.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
